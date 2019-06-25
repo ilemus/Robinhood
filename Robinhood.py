@@ -3,7 +3,7 @@ import json
 import getpass
 
 VERSION = 'v1.1'
-DEBUG = False
+DEBUG = True
 
 class Uri:
     api = 'https://api.robinhood.com'
@@ -20,12 +20,12 @@ class Uri:
     def accounts():
         return Uri.api + '/accounts/'
     
-    def instruments(instrumentId=None, option=None):
+    def instruments(symbol):
         '''
         Return information about a specific instrument by providing its instrument id.
         Add extra options for additional information such as "popularity"
         '''
-        return api_url + "/instruments/" + ("{id}/".format(id=instrumentId) if instrumentId else "") + ("{_option}/".format(_option=option) if option else "")
+        return Uri.api + "/instruments/?symbol=" + symbol
 
 
 class Robinhood:
@@ -45,6 +45,8 @@ class Robinhood:
         self.refresh_token = None
         self.account = None
         self.logged_in = False
+        self.instruments = {}
+        self.stock_ids = {}
         print('constructed ' + VERSION)
     
     def prompt_login(self):
@@ -94,10 +96,9 @@ class Robinhood:
         obj = json.loads(resp.text)
         self.refresh_token                      = obj['refresh_token']
         self.session.headers['Authorization']   = 'Bearer ' + obj['access_token']
-        
-        # make account request to get current info
-        self.account = self.account_info()
         self.logged_in = True
+        # make account request to get current info
+        self.account = self.account_info()['results'][0]
 
     '''
     account_info: requires to be logged in
@@ -136,9 +137,11 @@ class Robinhood:
     cancel: "gtc"
     '''
     def limit_buy(self, symbol, price, quantity, extended=False, cancel="gfd"):
-        if not logged_in:
+        if not self.logged_in:
             self.prompt_login()
-            
+        
+        instrument = self.get_instrument(symbol.upper())
+        
         data = {
             "time_in_force":cancel,
             "price":price,
@@ -147,12 +150,26 @@ class Robinhood:
             "trigger":"immediate",
             "type":"limit",
             "account":self.account['url'],
-            # Instrument needs to be dynamic
-            "instrument":"",
+            "instrument":instrument,
             "symbol":symbol,
             # "ref_id":"",
             "extended_hours":extended
         }
+        if DEBUG:
+            print(data)
+    
+    def get_instrument(self, symbol):
+        if symbol in self.instruments.keys():
+            return self.instruments[symbol]
+        else:
+            resp = self.session.get(Uri.instruments(symbol=symbol))
+            if DEBUG:
+                Robinhood.log_response(resp)
+            obj = json.loads(resp.text)
+            url = obj['results'][0]['url']
+            self.instruments[symbol] = url
+            self.stock_ids[symbol] = obj['results'][0]['id']
+            return url
     
     def log_response(resp):
         print("--------START--------")
