@@ -49,8 +49,14 @@ class Robinhood:
     
     def prompt_login(self):
         self.login(input("Username: "), getpass.getpass())
-    
+    '''
+    login: make login request, and then get account info (ignore if logged in already)
+    username: "test@mail.com"
+    password: "password"
+    '''
     def login(self, username, password):
+        if self.logged_in:
+            return
         print('logging in...')
         # I think we need to do OPTIONS request first ??
         '''
@@ -93,13 +99,25 @@ class Robinhood:
         self.account = self.account_info()
         self.logged_in = True
 
+    '''
+    account_info: requires to be logged in
+    return: json object of /accounts/ request
+    '''
     def account_info(self):
+        if not self.logged_in:
+            return None
         resp = self.session.get(Uri.accounts())
         if DEBUG:
             Robinhood.log_response(resp)
         return json.loads(resp.text)
-        
+
+    '''
+    logout: requires to be logged in, requests token to be removed
+    TODO: which token is used???
+    '''
     def logout(self):
+        if not self.logged_in:
+            return
         data = {
             "client_id":self.client_id,
             "token":self.refresh_token
@@ -108,8 +126,15 @@ class Robinhood:
         if DEBUG:
             Robinhood.log_response(resp)
         self.logged_in = False
-        
-    # symbol, price, quantity are strings
+
+    '''
+    limit_buy: buy a stock at a limit price (usually lower than current price)
+    symbol: "ABC"
+    price: "10.01"
+    quantity: "10"
+    extended: True
+    cancel: "gtc"
+    '''
     def limit_buy(self, symbol, price, quantity, extended=False, cancel="gfd"):
         if not logged_in:
             self.prompt_login()
