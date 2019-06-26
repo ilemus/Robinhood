@@ -5,28 +5,30 @@ import getpass
 VERSION = 'v1.1'
 DEBUG = True
 
-class Uri:
+class Url:
     api = 'https://api.robinhood.com'
     
     def login():
-        return Uri.api + '/oauth2/token/'
+        return Url.api + '/oauth2/token/'
     
     def logout():
-        return Uri.api + '/oauth2/revoke_token/'
+        return Url.api + '/oauth2/revoke_token/'
     
     def order():
-        return Uri.api + '/orders/'
+        return Url.api + '/orders/'
     
     def accounts():
-        return Uri.api + '/accounts/'
+        return Url.api + '/accounts/'
     
     def instruments(symbol):
         '''
         Return information about a specific instrument by providing its instrument id.
         Add extra options for additional information such as "popularity"
         '''
-        return Uri.api + "/instruments/?symbol=" + symbol
+        return Url.api + "/instruments/?symbol=" + symbol
 
+    def quote(s_id):
+        return Url.api + "/marketdata/quotes/" + s_id + "/?include_inactive=true"
 
 class Robinhood:
     def __init__(self):
@@ -47,6 +49,7 @@ class Robinhood:
         self.logged_in = False
         self.instruments = {}
         self.stock_ids = {}
+        self.pending_orders = []
         print('constructed ' + VERSION)
     
     def prompt_login(self):
@@ -72,7 +75,7 @@ class Robinhood:
             'Connection': 'keep-alive',
             'TE': 'Trailers'
         }
-        resp = self.session.options(Uri.login(), headers=headers)
+        resp = self.session.options(Url.login(), headers=headers)
         '''
         
         data = {
@@ -86,7 +89,7 @@ class Robinhood:
             "password":password
         }
         
-        resp = self.session.post(Uri.login(), data=json.dumps(data))
+        resp = self.session.post(Url.login(), data=json.dumps(data))
         if DEBUG:
             Robinhood.log_response(resp)
         if resp.status_code is not 200:
@@ -107,7 +110,7 @@ class Robinhood:
     def account_info(self):
         if not self.logged_in:
             return None
-        resp = self.session.get(Uri.accounts())
+        resp = self.session.get(Url.accounts())
         if DEBUG:
             Robinhood.log_response(resp)
         return json.loads(resp.text)
@@ -123,7 +126,7 @@ class Robinhood:
             "client_id":self.client_id,
             "token":self.refresh_token
         }
-        resp = self.session.post(Uri.logout(), data=json.dumps(data))
+        resp = self.session.post(Url.logout(), data=json.dumps(data))
         if DEBUG:
             Robinhood.log_response(resp)
         self.logged_in = False
@@ -139,8 +142,9 @@ class Robinhood:
     def limit_buy(self, symbol, price, quantity, extended=False, cancel="gfd"):
         if not self.logged_in:
             self.prompt_login()
-        
-        instrument = self.get_instrument(symbol.upper())
+        # This also will update stock_ids
+        symbol = symbol.upper()
+        instrument = self.get_instrument(symbol)
         
         data = {
             "time_in_force":cancel,
@@ -157,12 +161,17 @@ class Robinhood:
         }
         if DEBUG:
             print(data)
+        
+        resp = self.session.post(Url.order(), data=json.dumps(data))
+        self.pending_orders.add(json.loads(resp.text))
+        if DEBUG:
+            Robinhood.log_response(resp)
     
     def get_instrument(self, symbol):
         if symbol in self.instruments.keys():
             return self.instruments[symbol]
         else:
-            resp = self.session.get(Uri.instruments(symbol=symbol))
+            resp = self.session.get(Url.instruments(symbol=symbol))
             if DEBUG:
                 Robinhood.log_response(resp)
             obj = json.loads(resp.text)
@@ -170,6 +179,37 @@ class Robinhood:
             self.instruments[symbol] = url
             self.stock_ids[symbol] = obj['results'][0]['id']
             return url
+    
+    '''
+    get_quote: returns quote
+    symbol: Tradable stock symbol name
+    {
+      "ask_price": "48.190000",
+      "ask_size": 2300,
+      "bid_price": "48.180000",
+      "bid_size": 2900,
+      "last_trade_price": "48.309300",
+      "last_extended_hours_trade_price": null,
+      "previous_close": "46.850000",
+      "adjusted_previous_close": "46.850000",
+      "previous_close_date": "2019-06-25",
+      "symbol": "INTC",
+      "trading_halted": false,
+      "has_traded": true,
+      "last_trade_price_source": "nls",
+      "updated_at": "2019-06-26T17:52:07Z",
+      "instrument": "https:\/\/api.robinhood.com\/instruments\/ad059c69-0c1c-4c6b-8322-f53f1bbd69d4\/"
+    }
+    '''
+    def get_quote(self, symbol):
+        symbol = symbol.upper()
+        self.get_instrument(symbol)
+        # stock_ids is updated
+        s_id = self.stock_ids[symbol]
+        resp = self.session.get(Url.quote(s_id))
+        if DEBUG:
+            Robinhood.log_response(resp)
+        return resp
     
     def log_response(resp):
         print("--------START--------")
