@@ -168,7 +168,8 @@ Limit buy a stock at a set price with specified quantity.
 There is an option to buy during pre/after-market as well as set cancellable to 'gfd' (good for day) or 'gtc' (good til cancelled).  
 Make a ``` POST ``` request to ``` https://api.robinhood.com/orders/ ``` with the following content:
 ```json
-    "time_in_force":cancel,
+{
+    "time_in_force":"gfd",
     "price":"10.00",
     "quantity":"1",
     "side":"buy",
@@ -176,7 +177,7 @@ Make a ``` POST ``` request to ``` https://api.robinhood.com/orders/ ``` with th
     "type":"limit",
     "account":"https://api.robinhood.com/accounts/ACCT#/",
     "instrument":"https://api.robinhood.com/instruments/ad059c69-0c1c-4c6b-8322-f53f1bbd69d4/",
-    "symbol":symbol,
+    "symbol":"AAPL",
     "extended_hours":"false"
 }
 ```
