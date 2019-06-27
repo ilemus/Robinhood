@@ -162,6 +162,59 @@ A ``` GET ``` request is made to ``` https://api.robinhood.com/accounts/ ```. Th
 ### Buy
 #### Market Buy
 #### Limit Buy
+``` Robinhood ``` implementation: ``` limit_buy(symbol, price, quantity, extened=False, cancel=None) ```  
+``` Client ``` implementation: ``` limit_buy(symbol, price, quantity, extened=False, cancel=None) ```  
+Limit buy a stock at a set price with specified quantity.  
+There is an option to buy during pre/after-market as well as set cancellable to 'gfd' (good for day) or 'gtc' (good til cancelled).  
+Make a ``` POST ``` request to ``` https://api.robinhood.com/orders/ ``` with the following content:
+```json
+    "time_in_force":cancel,
+    "price":"10.00",
+    "quantity":"1",
+    "side":"buy",
+    "trigger":"immediate",
+    "type":"limit",
+    "account":"https://api.robinhood.com/accounts/ACCT#/",
+    "instrument":"https://api.robinhood.com/instruments/ad059c69-0c1c-4c6b-8322-f53f1bbd69d4/",
+    "symbol":symbol,
+    "extended_hours":"false"
+}
+```
+
+The server will respond with the following order information:
+```json
+{
+    "updated_at":"2019-06-27T18:59:34.203980Z",
+    "ref_id":"",
+    "time_in_force":"gfd",
+    "last_trail_price":"","fees":"0.00",
+    "cancel":"https://api.robinhood.com/orders/ORDER#/cancel/",
+    "response_category":"",
+    "id":"5eac5f8d-1276-440e-86ff-63de35c4bcbf",
+    "cumulative_quantity":"0.00000",
+    "stop_price":"",
+    "reject_reason":"",
+    "instrument":"https://api.robinhood.com/instruments/450dfc6d-5510-4d40-abfb-f633b7d9be3e/",
+    "state":"unconfirmed",
+    "trigger":"immediate",
+    "override_dtbp_checks":false,
+    "last_trail_price_updated_at":"",
+    "type":"limit",
+    "last_transaction_at":"2019-06-27T18:59:34.196783Z",
+    "price":"10.00000000",
+    "executions":[],
+    "extended_hours":false,
+    "account":"https://api.robinhood.com/accounts/ACCT#/",
+    "stop_triggered_at":"",
+    "url":"https://api.robinhood.com/orders/ORDER#/",
+    "created_at":"2019-06-27T18:56:34.191793Z",
+    "side":"buy",
+    "override_day_trade_checks":false,
+    "position":"https://api.robinhood.com/positions/ACCT#/POSITION#/",
+    "average_price":"",
+    "quantity":"1.00000"
+}
+```
 ### Sell
 #### Market Sell
 #### Limit Sell

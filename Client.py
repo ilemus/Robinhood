@@ -5,10 +5,10 @@ import getpass
 from ApiBase import ApiBase
 from Url import Url
 
-VERSION = "1.0"
-DEBUG = False
-
 class Client(ApiBase):
+    DEBUG = False
+    VERSION = "1.0"
+
     def __init__(self):
         self.session = requests.Session()
         self.session.headers = {
@@ -29,7 +29,7 @@ class Client(ApiBase):
         self.stock_ids = {}
         self.symbols = {}
         self.pending_orders = []
-        # print('constructed ' + VERSION)
+        # print('constructed ' + Client.VERSION)
     
     '''
     login: make login request, and then get account info (ignore if logged in already)
@@ -67,7 +67,7 @@ class Client(ApiBase):
         }
         
         resp = self.session.post(Url.login(), data=json.dumps(data))
-        if DEBUG:
+        if Client.DEBUG:
             Client.log_response(resp)
         if resp.status_code is not 200:
             # possibly throw exception instead
@@ -88,7 +88,7 @@ class Client(ApiBase):
         if not self.logged_in:
             return None
         resp = self.session.get(Url.accounts())
-        if DEBUG:
+        if Client.DEBUG:
             Client.log_response(resp)
         return json.loads(resp.text)
 
@@ -104,7 +104,7 @@ class Client(ApiBase):
             "token":self.refresh_token
         }
         resp = self.session.post(Url.logout(), data=json.dumps(data))
-        if DEBUG:
+        if Client.DEBUG:
             Client.log_response(resp)
         self.logged_in = False
 
@@ -137,12 +137,12 @@ class Client(ApiBase):
             # "ref_id":"",
             "extended_hours":extended
         }
-        if DEBUG:
+        if Client.DEBUG:
             print(data)
         
         resp = self.session.post(Url.order(), data=json.dumps(data))
-        self.pending_orders.add(json.loads(resp.text))
-        if DEBUG:
+        self.pending_orders.append(json.loads(resp.text))
+        if Client.DEBUG:
             Client.log_response(resp)
     
     def get_instrument(self, symbol):
@@ -150,7 +150,7 @@ class Client(ApiBase):
             return self.instruments[symbol]
         else:
             resp = self.session.get(Url.instruments(symbol=symbol))
-            if DEBUG:
+            if Client.DEBUG:
                 Client.log_response(resp)
             obj = json.loads(resp.text)
             url = obj['results'][0]['url']
@@ -186,7 +186,7 @@ class Client(ApiBase):
         # stock_ids is updated
         s_id = self.stock_ids[symbol]
         resp = self.session.get(Url.quote(s_id))
-        if DEBUG:
+        if Client.DEBUG:
             Client.log_response(resp)
         return resp
     
@@ -226,7 +226,7 @@ class Client(ApiBase):
             return self.symbols[string]
         else:
             resp = self.session.get(instrument)
-            if DEBUG:
+            if Client.DEBUG:
                 Client.log_response(resp)
             obj = json.loads(resp.text)
             self.symbols[string] = obj['symbol']
