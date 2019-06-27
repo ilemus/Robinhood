@@ -7,6 +7,11 @@ DEBUG = True
 
 class Url:
     api = 'https://api.robinhood.com'
+    def accounts():
+        return Url.api + '/accounts/'
+    
+    def instruments(symbol):
+        return Url.api + "/instruments/?symbol=" + symbol
     
     def login():
         return Url.api + '/oauth2/token/'
@@ -17,20 +22,14 @@ class Url:
     def order():
         return Url.api + '/orders/'
     
-    def accounts():
-        return Url.api + '/accounts/'
+    def positions():
+        return Url.api + "/positions/?nonzero=true"
     
-    def instruments(symbol):
-        '''
-        Return information about a specific instrument by providing its instrument id.
-        Add extra options for additional information such as "popularity"
-        '''
-        return Url.api + "/instruments/?symbol=" + symbol
-
     def quote(s_id):
         return Url.api + "/marketdata/quotes/" + s_id + "/?include_inactive=true"
 
-class Robinhood:
+
+class Client:
     def __init__(self):
         self.session = requests.Session()
         self.session.headers = {
@@ -49,11 +48,13 @@ class Robinhood:
         self.logged_in = False
         self.instruments = {}
         self.stock_ids = {}
+        self.symbols = {}
         self.pending_orders = []
         print('constructed ' + VERSION)
     
     def prompt_login(self):
         self.login(input("Username: "), getpass.getpass())
+    
     '''
     login: make login request, and then get account info (ignore if logged in already)
     username: "test@mail.com"
@@ -91,7 +92,7 @@ class Robinhood:
         
         resp = self.session.post(Url.login(), data=json.dumps(data))
         if DEBUG:
-            Robinhood.log_response(resp)
+            Client.log_response(resp)
         if resp.status_code is not 200:
             # possibly throw exception instead
             print('login failed')
@@ -112,7 +113,7 @@ class Robinhood:
             return None
         resp = self.session.get(Url.accounts())
         if DEBUG:
-            Robinhood.log_response(resp)
+            Client.log_response(resp)
         return json.loads(resp.text)
 
     '''
@@ -128,7 +129,7 @@ class Robinhood:
         }
         resp = self.session.post(Url.logout(), data=json.dumps(data))
         if DEBUG:
-            Robinhood.log_response(resp)
+            Client.log_response(resp)
         self.logged_in = False
 
     '''
@@ -165,7 +166,7 @@ class Robinhood:
         resp = self.session.post(Url.order(), data=json.dumps(data))
         self.pending_orders.add(json.loads(resp.text))
         if DEBUG:
-            Robinhood.log_response(resp)
+            Client.log_response(resp)
     
     def get_instrument(self, symbol):
         if symbol in self.instruments.keys():
@@ -173,11 +174,12 @@ class Robinhood:
         else:
             resp = self.session.get(Url.instruments(symbol=symbol))
             if DEBUG:
-                Robinhood.log_response(resp)
+                Client.log_response(resp)
             obj = json.loads(resp.text)
             url = obj['results'][0]['url']
             self.instruments[symbol] = url
             self.stock_ids[symbol] = obj['results'][0]['id']
+            self.symbols['id'] = symbol
             return url
     
     '''
@@ -208,8 +210,52 @@ class Robinhood:
         s_id = self.stock_ids[symbol]
         resp = self.session.get(Url.quote(s_id))
         if DEBUG:
-            Robinhood.log_response(resp)
+            Client.log_response(resp)
         return resp
+    
+    '''
+    {
+      "shares_held_for_stock_grants": "0.0000",
+      "account": "https:\/\/api.robinhood.com\/accounts\/5RX37639\/",
+      "pending_average_buy_price": "160.7200",
+      "shares_held_for_options_events": "0.0000",
+      "intraday_average_buy_price": "0.0000",
+      "url": "https:\/\/api.robinhood.com\/positions\/5RX37639\/9c53326c-d07e-4b82-82d2-b108ec5d9530\/",
+      "shares_held_for_options_collateral": "0.0000",
+      "created_at": "2018-04-03T17:15:10.913191Z",
+      "updated_at": "2018-04-03T17:18:47.026106Z",
+      "shares_held_for_buys": "0.0000",
+      "average_buy_price": "160.7200",
+      "instrument": "https:\/\/api.robinhood.com\/instruments\/9c53326c-d07e-4b82-82d2-b108ec5d9530\/",
+      "intraday_quantity": "0.0000",
+      "shares_held_for_sells": "0.0000",
+      "shares_pending_from_options_events": "0.0000",
+      "quantity": "1.0000"
+    }
+    '''
+    def get_positions(self):
+        if not self.logged_in:
+            return None
+        resp = self.session.get(Url.positions())
+        return json.loads(resp.text)['results']
+    
+    def get_symbol_from_instrument(self, instrument):
+        # 9c53326c-d07e-4b82-82d2-b108ec5d9530
+        length = len(instrument)
+        START_INDEX = 37
+        END_INDEX = 1
+        string = instrument[length - START_INDEX:length - END_INDEX]
+        if string in self.symbols.keys():
+            return self.symbols[string]
+        else:
+            resp = self.session.get(instrument)
+            if DEBUG:
+                Client.log_response(resp)
+            obj = json.loads(resp.text)
+            self.symbols[string] = obj['symbol']
+            self.instruments[obj['symbol']] = instrument
+            self.stock_ids[obj['symbol']] = string
+            return obj['symbol']
     
     def log_response(resp):
         print("--------START--------")
@@ -218,3 +264,29 @@ class Robinhood:
         print(resp.headers)
         print(resp.text)
         print("---------END---------")
+
+class Robinhood:
+    def __init__(self):
+        self.client = Client()
+        global DEBUG
+        DEBUG = False
+        
+    def login(self):
+        self.client.prompt_login()
+    
+    '''
+    Format portfolio by printing:
+    [index]\t[shares]\t[average price]
+    '''
+    def portfolio(self):
+        pos = self.client.get_positions()
+        if pos is None:
+            return
+        for p in pos:
+            symbol = self.client.get_symbol_from_instrument(p['instrument'])
+            quantity = int(float(p['quantity']))
+            price = float(p['average_buy_price'])
+            print(f"{symbol}\t{quantity}\t{price}")
+    
+    def logout(self):
+        self.client.logout()
