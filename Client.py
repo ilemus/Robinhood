@@ -234,6 +234,15 @@ class Client(ApiBase):
             self.stock_ids[obj['symbol']] = string
             return obj['symbol']
     
+    def cancel_order(self, order_pos):
+        if order_pos >= len(self.pending_orders):
+            return
+        
+        resp = self.session.post(self.pending_orders[order_pos]['cancel'])
+        if Client.DEBUG:
+            Client.log_response(resp)
+        del self.pending_orders[order_pos]
+    
     def log_response(resp):
         print("--------START--------")
         print(resp.status_code)
