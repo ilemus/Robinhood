@@ -2,12 +2,13 @@ import requests
 import json
 import getpass
 
+from ApiBase import ApiBase
 from Url import Url
 
 VERSION = "1.0"
 DEBUG = False
 
-class Client:
+class Client(ApiBase):
     def __init__(self):
         self.session = requests.Session()
         self.session.headers = {
@@ -29,9 +30,6 @@ class Client:
         self.symbols = {}
         self.pending_orders = []
         # print('constructed ' + VERSION)
-    
-    def prompt_login(self):
-        self.login(input("Username: "), getpass.getpass())
     
     '''
     login: make login request, and then get account info (ignore if logged in already)
@@ -118,13 +116,14 @@ class Client:
     extended: True
     cancel: "gtc"
     '''
-    def limit_buy(self, symbol, price, quantity, extended=False, cancel="gfd"):
+    def limit_buy(self, symbol, price, quantity, extended=False, cancel=None):
         if not self.logged_in:
             self.prompt_login()
         # This also will update stock_ids
         symbol = symbol.upper()
         instrument = self.get_instrument(symbol)
-        
+        if cancel is None:
+            cancel = "gfd"
         data = {
             "time_in_force":cancel,
             "price":price,

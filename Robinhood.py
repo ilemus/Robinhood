@@ -1,8 +1,8 @@
 from Client import Client
 
 class Robinhood:
-    def __init__(self):
-        self.client = Client()
+    def __init__(self, client):
+        self.client = client
         
     def login(self):
         self.client.prompt_login()
