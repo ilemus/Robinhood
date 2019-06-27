@@ -1,7 +1,7 @@
 # Robinhood  
 Python implementation of Robinhood API.  
 Updated June 27 2019.  
-There are three Classes inside of [Robinhood.py](Robinhood.py), the structure is as follows:  
+There are three classes inside, the structure is as follows:  
 ``` Robinhood ``` has ``` Client ``` uses ``` Url ```  
   
 Upon construction a Client is created with a session.  
@@ -56,8 +56,10 @@ Robinhood will reply with the following content:
 }
 ```
 ## Logout
+``` Robinhood ``` implementation: ``` logout() ```  
+``` Client ``` implementation: ``` logout() ```  
 Logging out is straightforward. In the header include the ``` Authorization ``` token, and the body will include the refresh token.  
-Make a ``` POST ``` request to ``` https://api.robinhood.com/oauth2/revoke_token ``` with the following content:
+Make a ``` POST ``` request to ``` https://api.robinhood.com/oauth2/revoke_token/ ``` with the following content:
 ```json
 {
     "client_id":"c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS",
@@ -66,6 +68,91 @@ Make a ``` POST ``` request to ``` https://api.robinhood.com/oauth2/revoke_token
 ```
 At this point the server will return a 200 error code with no content.
 ## Account Info
+``` Client ``` implementation: ``` account_info() ```  
+Requires user login (Authorization token). The request is made to Robinhood and returns general account info.  
+A ``` GET ``` request is made to ``` https://api.robinhood.com/accounts/ ```. The server will respond with the following:  
+```json
+{
+    "previous": "",
+    "results": [
+        {
+            "rhs_account_number": 0,
+            "deactivated": "false",
+            "updated_at": "2019-04-11T17:56:00.919656Z",
+            "margin_balances": {
+                "updated_at": "2019-06-27T13:04:59.931513Z",
+                "gold_equity_requirement": "2000.0000",
+                "pending_deposit": "0.0000",
+                "cash_held_for_restrictions":"0.0000",
+                "outstanding_interest": "0.0000",
+                "cash_pending_from_options_events": "0.0000",
+                "cash_held_for_options_collateral": "0.0000",
+                "uncleared_nummus_deposits": "0.0000",
+                "overnight_ratio": "0.50",
+                "day_trade_buying_power": "1.0000",
+                "cash_available_for_withdrawal": "0.5000",
+                "settled_amount_borrowed": "0.0000",
+                "sma": "0",
+                "cash_held_for_nummus_restrictions": "0.0000",
+                "marked_pattern_day_trader_date": "2019-06-24",
+                "unallocated_margin_cash": "100.0000",
+                "day_trades_protection": "false",
+                "start_of_day_dtbp": "50.0000",
+                "overnight_buying_power_held_for_orders": "0.0000",
+                "day_trade_ratio": "0.25",
+                "cash_held_for_orders": "0.0000",
+                "unsettled_debit": "50.0000",
+                "day_trade_buying_power_held_for_orders": "0.0000",
+                "cash_held_for_dividends": "0.0000",
+                "cash": "50.0000",
+                "start_of_day_overnight_buying_power": "100.0000", 
+                "margin_limit": "1000.0000",
+                "overnight_buying_power": "50.0000",
+                "uncleared_deposits": "0.0000",
+                "unsettled_funds": "0.0000",
+                "created_at": "2016-12-06T13:43:35.012127Z"
+            },
+            "portfolio": "https://api.robinhood.com/accounts/ACCT#/portfolio/",
+            "cash_balances": "",
+            "active_subscription_id": "id#",
+            "can_downgrade_to_cash": "https://api.robinhood.com/accounts/ACCT#/can_downgrade_to_cash/",
+            "withdrawal_halted": "false",
+            "cash_available_for_withdrawal": "1.0000",
+            "state": "active",
+            "type": "margin",
+            "sma": "0",
+            "sweep_enabled": "true",
+            "deposit_halted": "false",
+            "buying_power": "100.0000",
+            "user": "https://api.robinhood.com/user/",
+            "max_ach_early_access_amount": "25000.00",
+            "option_level": "option_level_3",
+            "instant_eligibility": {
+                "reinstatement_date": "",
+                "state": "ok",
+                "updated_at": "",
+                "reason": "",
+                "additional_deposit_needed": "0.0000",
+                "reversal": ""
+            },
+            "cash_held_for_orders": "0.0000",
+            "locked": "",
+            "only_position_closing_trades": "false",
+            "url": "https://api.robinhood.com/accounts/ACCT#/",
+            "positions": "https://api.robinhood.com/accounts/ACCT#/positions/",
+            "created_at": "2017-09-20T22:56:25.494268Z",
+            "cash": "50.0000",
+            "sma_held_for_orders": "0",
+            "unsettled_debit": "50.0000",
+            "account_number": "ACCT#",
+            "is_pinnacle_account": "true",
+            "uncleared_deposits": "0.0000",
+            "unsettled_funds": "0.0000"
+        }
+    ],
+    "next": ""
+}
+```
 ### Positions
 ## Quote
 ### Symbols
