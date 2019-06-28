@@ -165,7 +165,7 @@ class Client(ApiBase):
         instrument = self.get_instrument(symbol)
         if cancel is None:
             cancel = "gfd"
-        price = float(self.get_quote(symbol)['last_trade_price'])
+        price = float(self.get_quote(symbol).price)
         data = {
             "time_in_force":cancel,
             "price":"{0:.2f}".format(price),
@@ -224,7 +224,7 @@ class Client(ApiBase):
         instrument = self.get_instrument(symbol)
         if cancel is None:
             cancel = "gfd"
-        price = float(self.get_quote(symbol)['last_trade_price'])
+        price = float(self.get_quote(symbol).price)
         
         data = {
             "time_in_force":cancel,
