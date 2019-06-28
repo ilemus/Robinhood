@@ -3,6 +3,9 @@ class Url:
     def accounts():
         return Url.api + '/accounts/'
     
+    def book(s_id):
+        return Url.api + '/marketdata/pricebook/snapshots/' + s_id + '/'
+    
     def instruments(symbol):
         return Url.api + "/instruments/?symbol=" + symbol
     

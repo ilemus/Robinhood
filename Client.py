@@ -5,6 +5,18 @@ import getpass
 from ApiBase import ApiBase
 from Url import Url
 
+class Quote:
+    def __init__(self, obj):
+        self.price = float(obj['last_trade_price'])
+        self.bid_price = float(obj['bid_price'])
+        self.bid_size = obj['bid_size']
+        self.ask_price = float(obj['ask_price'])
+        self.ask_size = obj['ask_size']
+        
+    def __str__(self):
+        return "{ " + "price: " + str(self.price) + ", bid_price: " + str(self.bid_price) + ", bid_size: " \
+            + str(self.bid_size) + ", ask_price: " + str(self.ask_price) + ", ask_size: " + str(self.ask_size) + " }"
+        
 class Client(ApiBase):
     DEBUG = False
     VERSION = "1.0"
@@ -246,7 +258,7 @@ class Client(ApiBase):
             url = obj['results'][0]['url']
             self.instruments[symbol] = url
             self.stock_ids[symbol] = obj['results'][0]['id']
-            self.symbols['id'] = symbol
+            self.symbols[obj['results'][0]['id']] = symbol
             return url
     
     '''
@@ -276,6 +288,24 @@ class Client(ApiBase):
         # stock_ids is updated
         s_id = self.stock_ids[symbol]
         resp = self.session.get(Url.quote(s_id))
+        if Client.DEBUG:
+            Client.log_response(resp)
+        return Quote(json.loads(resp.text))
+    
+    '''
+    'bids' {
+        [{'side': 'bid', 'price': {'amount': '198.000000', 'currency_code': 'USD'}, 'quantity': 500}]
+    },
+    'asks' {
+        [{'side': 'ask', 'price': {'amount': '198.010000', 'currency_code': 'USD'}, 'quantity': 500}]
+    }
+    '''
+    def get_book(self, symbol):
+        if not self.logged_in:
+            return None
+        symbol = symbol.upper()
+        self.get_instrument(symbol)
+        resp = self.session.get(Url.book(self.stock_ids[symbol]))
         if Client.DEBUG:
             Client.log_response(resp)
         return json.loads(resp.text)
