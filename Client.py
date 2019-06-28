@@ -145,6 +145,96 @@ class Client(ApiBase):
         if Client.DEBUG:
             Client.log_response(resp)
     
+    def buy(self, symbol, quantity, extended=False, cancel=None):
+        if not self.logged_in:
+            self.prompt_login()
+        # This also updates stock_ids
+        symbol = symbol.upper()
+        instrument = self.get_instrument(symbol)
+        if cancel is None:
+            cancel = "gfd"
+        price = float(self.get_quote(symbol)['last_trade_price'])
+        data = {
+            "time_in_force":cancel,
+            "price":"{0:.2f}".format(price),
+            "quantity":quantity,
+            "side":"buy",
+            "trigger":"immediate",
+            "type":"market",
+            "account":self.account['url'],
+            "instrument":instrument,
+            "symbol":symbol,
+            # "ref_id":"",
+            "extended_hours":extended
+        }
+        if Client.DEBUG:
+            print(data)
+        
+        resp = self.session.post(Url.order(), data=json.dumps(data))
+        self.pending_orders.append(json.loads(resp.text))
+        if Client.DEBUG:
+            Client.log_response(resp)
+    
+    def limit_sell(self, symbol, price, quantity, extended=False, cancel=None):
+        if not self.logged_in:
+            self.prompt_login()
+        # This also will update stock_ids
+        symbol = symbol.upper()
+        instrument = self.get_instrument(symbol)
+        if cancel is None:
+            cancel = "gfd"
+        data = {
+            "time_in_force":cancel,
+            "price":price,
+            "quantity":quantity,
+            "side":"sell",
+            "trigger":"immediate",
+            "type":"limit",
+            "account":self.account['url'],
+            "instrument":instrument,
+            "symbol":symbol,
+            # "ref_id":"",
+            "extended_hours":extended
+        }
+        if Client.DEBUG:
+            print(data)
+        
+        resp = self.session.post(Url.order(), data=json.dumps(data))
+        self.pending_orders.append(json.loads(resp.text))
+        if Client.DEBUG:
+            Client.log_response(resp)
+    
+    def sell(self, symbol, quantity, extended=False, cancel=None):
+        if not self.logged_in:
+            self.prompt_login()
+        # This also updates stock_ids
+        symbol = symbol.upper()
+        instrument = self.get_instrument(symbol)
+        if cancel is None:
+            cancel = "gfd"
+        price = float(self.get_quote(symbol)['last_trade_price'])
+        
+        data = {
+            "time_in_force":cancel,
+            "price":"{0:.2f}".format(price),
+            "quantity":quantity,
+            "side":"sell",
+            "trigger":"immediate",
+            "type":"market",
+            "account":self.account['url'],
+            "instrument":instrument,
+            "symbol":symbol,
+            # "ref_id":"",
+            "extended_hours":extended
+        }
+        if Client.DEBUG:
+            print(data)
+        
+        resp = self.session.post(Url.order(), data=json.dumps(data))
+        self.pending_orders.append(json.loads(resp.text))
+        if Client.DEBUG:
+            Client.log_response(resp)
+    
     def get_instrument(self, symbol):
         if symbol in self.instruments.keys():
             return self.instruments[symbol]
@@ -188,7 +278,7 @@ class Client(ApiBase):
         resp = self.session.get(Url.quote(s_id))
         if Client.DEBUG:
             Client.log_response(resp)
-        return resp
+        return json.loads(resp.text)
     
     '''
     {

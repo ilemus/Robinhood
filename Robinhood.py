@@ -7,10 +7,6 @@ class Robinhood:
     def login(self):
         self.client.prompt_login()
     
-    '''
-    Format portfolio by printing:
-    [index]\t[shares]\t[average price]
-    '''
     def portfolio(self):
         pos = self.client.get_positions()
         if pos is None:
@@ -21,9 +17,18 @@ class Robinhood:
             price = float(p['average_buy_price'])
             print(f"{symbol}\t{quantity}\t{price}")
     
+    def buy(self, symbol, quantity, extended=False, cancel=None):
+        self.client.buy(symbol, quantity, extended, cancel)
+    
     def limit_buy(self, symbol, price, quantity, extened=False, cancel=None):
         self.client.limit_buy(symbol, price, quantity, extened, cancel)
         
+    def sell(self, symbol, quantity, extended=False, cancel=None):
+        self.client.sell(symbol, quantity, extended, cancel)
+    
+    def limit_sell(self, symbol, price, quantity, extended=False, cancel=None):
+        self.client.limit_sell(symbol, price, quantity, extened, cancel)
+    
     def cancel_order(self):
         length = len(self.client.pending_orders)
         if length is 1:
@@ -37,7 +42,7 @@ class Robinhood:
                 print(str(i) + ": " + self.client.get_symbol_from_instrument(self.client.pending_orders[i]["instrument"]) \
                       + "\t" + str(int(float(self.client.pending_orders[i]["quantity"]))) \
                       + "\t" + str(float(self.client.pending_orders[i]["price"])))
-            num = input("Enter order number to cancel: ")
+            num = int(input("Enter order number to cancel: ")
             if num >= 0 and num < length:
                 self.client.cancel_order(num)
             else:
