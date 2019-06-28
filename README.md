@@ -13,6 +13,10 @@ Upon construction a Client is created with a session.
 - [Positions](#Positions)
 - [Quote](#Quote)
   * [Symbols](#Symbols)
+    + [Level 1](#Level-1)
+      * [Fundamental Data](#Fundamental-Data)
+    + [Level 2](#Level-2)
+      * [Ask/Bid Book](#Ask/Bid-Book)
     + [Fundamental Data](#Fundamental-Data)
   * [Options](#Options)
 - [Trade](#Trade)
@@ -156,33 +160,14 @@ A ``` GET ``` request is made to ``` https://api.robinhood.com/accounts/ ```. Th
 ### Positions
 ## Quote
 ### Symbols
-#### Fundamental Data
+#### Level 1
+##### Fundamental Data
+#### Level 2
+##### Ask/Bid Book
 ### Options
 ## Trade
-### Buy
-#### Market Buy
-#### Limit Buy
-``` Robinhood ``` implementation: ``` limit_buy(symbol, price, quantity, extened=False, cancel=None) ```  
-``` Client ``` implementation: ``` limit_buy(symbol, price, quantity, extened=False, cancel=None) ```  
-Limit buy a stock at a set price with specified quantity.  
-There is an option to buy during pre/after-market as well as set cancellable to 'gfd' (good for day) or 'gtc' (good til cancelled).  
-Make a ``` POST ``` request to ``` https://api.robinhood.com/orders/ ``` with the following content:
-```json
-{
-    "time_in_force":"gfd",
-    "price":"10.00",
-    "quantity":"1",
-    "side":"buy",
-    "trigger":"immediate",
-    "type":"limit",
-    "account":"https://api.robinhood.com/accounts/ACCT#/",
-    "instrument":"https://api.robinhood.com/instruments/ad059c69-0c1c-4c6b-8322-f53f1bbd69d4/",
-    "symbol":"AAPL",
-    "extended_hours":"false"
-}
-```
-
-The server will respond with the following order information:
+Common to all buy/sell types, every request to ``` /order/ ``` will respond with order information.  
+Data will vary based on transaction type, but gerneral keys are like below:  
 ```json
 {
     "updated_at":"2019-06-27T18:59:34.203980Z",
@@ -214,6 +199,28 @@ The server will respond with the following order information:
     "position":"https://api.robinhood.com/positions/ACCT#/POSITION#/",
     "average_price":"",
     "quantity":"1.00000"
+}
+```
+### Buy
+#### Market Buy
+#### Limit Buy
+``` Robinhood ``` implementation: ``` limit_buy(symbol, price, quantity, extened=False, cancel=None) ```  
+``` Client ``` implementation: ``` limit_buy(symbol, price, quantity, extened=False, cancel=None) ```  
+Limit buy a stock at a set price with specified quantity.  
+There is an option to buy during pre/after-market as well as set cancellable to 'gfd' (good for day) or 'gtc' (good til cancelled).  
+Make a ``` POST ``` request to ``` https://api.robinhood.com/orders/ ``` with the following content:
+```json
+{
+    "time_in_force":"gfd",
+    "price":"10.00",
+    "quantity":"1",
+    "side":"buy",
+    "trigger":"immediate",
+    "type":"limit",
+    "account":"https://api.robinhood.com/accounts/ACCT#/",
+    "instrument":"https://api.robinhood.com/instruments/ad059c69-0c1c-4c6b-8322-f53f1bbd69d4/",
+    "symbol":"AAPL",
+    "extended_hours":"false"
 }
 ```
 ### Sell
