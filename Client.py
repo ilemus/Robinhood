@@ -24,13 +24,12 @@ class Client(ApiBase):
     def __init__(self):
         self.session = requests.Session()
         self.session.headers = {
-            'Host': 'api.robinhood.com',
             'Accept': '*/*',
             'Accept-Language': 'en-US,en;q=0.5',
             'Accept-Encoding': 'gzip, deflate, br',
-            'Content-Type': 'application/json',
             'X-Robinhood-API-Version': '1.275.0',
             'Connection': 'keep-alive',
+            'DNT': '1',
             'TE': 'Trailers'
         }
         self.client_id = "c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS"
@@ -42,6 +41,12 @@ class Client(ApiBase):
         self.symbols = {}
         self.pending_orders = []
         # print('constructed ' + Client.VERSION)
+    
+    def get_device_token(self):
+        # clientId: "abcd-1938adf-192398192afasd-1239a"
+        resp = self.session.get(Url.login_page())
+        if Client.DEBUG:
+            print(resp.status_code)
     
     '''
     login: make login request, and then get account info (ignore if logged in already)
@@ -66,19 +71,20 @@ class Client(ApiBase):
         }
         resp = self.session.options(Url.login(), headers=headers)
         '''
-        
+        self.get_device_token()
         data = {
             "grant_type":"password",
             "scope":"internal",
             "client_id":self.client_id,
             "expires_in":86400,
             # Device token should be user-input
-            "device_token":"c2774eb3-e401-46d4-afa3-1e7421adfdc8",
+            "device_token":self.session.cookies.get_dict()['device_id'],
             "username":username,
-            "password":password
+            "password":password,
+            "challenge_type": "sms"
         }
         
-        resp = self.session.post(Url.login(), data=json.dumps(data))
+        resp = self.session.post(Url.login(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
         if Client.DEBUG:
             Client.log_response(resp)
         if resp.status_code is not 200:
@@ -115,7 +121,7 @@ class Client(ApiBase):
             "client_id":self.client_id,
             "token":self.refresh_token
         }
-        resp = self.session.post(Url.logout(), data=json.dumps(data))
+        resp = self.session.post(Url.logout(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
         if Client.DEBUG:
             Client.log_response(resp)
         self.logged_in = False
@@ -152,7 +158,7 @@ class Client(ApiBase):
         if Client.DEBUG:
             print(data)
         
-        resp = self.session.post(Url.order(), data=json.dumps(data))
+        resp = self.session.post(Url.order(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
         self.pending_orders.append(json.loads(resp.text))
         if Client.DEBUG:
             Client.log_response(resp)
@@ -182,7 +188,7 @@ class Client(ApiBase):
         if Client.DEBUG:
             print(data)
         
-        resp = self.session.post(Url.order(), data=json.dumps(data))
+        resp = self.session.post(Url.order(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
         self.pending_orders.append(json.loads(resp.text))
         if Client.DEBUG:
             Client.log_response(resp)
@@ -211,7 +217,7 @@ class Client(ApiBase):
         if Client.DEBUG:
             print(data)
         
-        resp = self.session.post(Url.order(), data=json.dumps(data))
+        resp = self.session.post(Url.order(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
         self.pending_orders.append(json.loads(resp.text))
         if Client.DEBUG:
             Client.log_response(resp)
@@ -242,7 +248,7 @@ class Client(ApiBase):
         if Client.DEBUG:
             print(data)
         
-        resp = self.session.post(Url.order(), data=json.dumps(data))
+        resp = self.session.post(Url.order(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
         self.pending_orders.append(json.loads(resp.text))
         if Client.DEBUG:
             Client.log_response(resp)
