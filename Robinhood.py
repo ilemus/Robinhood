@@ -13,7 +13,7 @@ class Robinhood:
     Then make sure Client.INSECURE = True
     '''
     def insecure_login(self):
-        self.insecure_login()
+        self.client.insecure_login()
     
     def portfolio(self):
         pos = self.client.get_positions()
