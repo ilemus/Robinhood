@@ -1,4 +1,4 @@
-from Client import Client
+from src.Client import Client
 
 class Robinhood:
     def __init__(self, client):
