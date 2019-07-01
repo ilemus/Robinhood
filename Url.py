@@ -11,6 +11,9 @@ class Url:
     
     def login():
         return Url.api + '/oauth2/token/'
+        
+    def login_page():
+        return "https://robinhood.com/login"
     
     def logout():
         return Url.api + '/oauth2/revoke_token/'
