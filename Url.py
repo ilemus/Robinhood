@@ -6,11 +6,17 @@ class Url:
     def book(s_id):
         return Url.api + '/marketdata/pricebook/snapshots/' + s_id + '/'
     
+    def challenge(c_id):
+        return Url.api + "/challenge/" + c_id + "/respond/"
+    
     def instruments(symbol):
         return Url.api + "/instruments/?symbol=" + symbol
     
     def login():
         return Url.api + '/oauth2/token/'
+        
+    def login_page():
+        return "https://robinhood.com/login"
     
     def logout():
         return Url.api + '/oauth2/revoke_token/'
