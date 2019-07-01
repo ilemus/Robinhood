@@ -3,9 +3,17 @@ from Client import Client
 class Robinhood:
     def __init__(self, client):
         self.client = client
-        
+    
     def login(self):
         self.client.prompt_login()
+    
+    '''
+    To maintain a session instead of entering SMS every time create a configuration file as detailed:
+    config.py:
+    Then make sure Client.INSECURE = True
+    '''
+    def insecure_login(self):
+        self.insecure_login()
     
     def portfolio(self):
         pos = self.client.get_positions()

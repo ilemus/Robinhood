@@ -1,6 +1,7 @@
 import requests
 import json
 import getpass
+import pickle
 
 from ApiBase import ApiBase
 from Url import Url
@@ -16,9 +17,16 @@ class Quote:
     def __str__(self):
         return "{ " + "price: " + str(self.price) + ", bid_price: " + str(self.bid_price) + ", bid_size: " \
             + str(self.bid_size) + ", ask_price: " + str(self.ask_price) + ", ask_size: " + str(self.ask_size) + " }"
-        
+
+class Configuration:
+    def __init__(self):
+        self.username = None
+        self.password = None
+        self.device_id = None
+    
 class Client(ApiBase):
     DEBUG = False
+    INSECURE = False
     VERSION = "1.0"
 
     def __init__(self):
@@ -48,30 +56,7 @@ class Client(ApiBase):
         if Client.DEBUG:
             print(resp.status_code)
     
-    '''
-    login: make login request, and then get account info (ignore if logged in already)
-    username: "test@mail.com"
-    password: "password"
-    '''
-    def login(self, username, password):
-        if self.logged_in:
-            return
-        # print('logging in...')
-        # I think we need to do OPTIONS request first ??
-        '''
-        headers = {
-            'Host': 'api.robinhood.com',
-            'Accept': '*/*',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Access-Control-Request-Method': 'POST',
-            'Access-Control-Request-Headers': 'content-type,x-robinhood-api-version',
-            'Connection': 'keep-alive',
-            'TE': 'Trailers'
-        }
-        resp = self.session.options(Url.login(), headers=headers)
-        '''
-        self.get_device_token()
+    def sms_confirm(self, username, password):
         data = {
             "grant_type":"password",
             "scope":"internal",
@@ -83,7 +68,88 @@ class Client(ApiBase):
             "password":password,
             "challenge_type": "sms"
         }
+        resp = self.session.post(Url.login(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
+        if Client.DEBUG:
+            Client.log_response(resp)
+        # when login fails, 400 error code is returned
+        if resp.status_code is 200:
+            return
         
+        obj = json.loads(resp.text)
+        c_id = obj['challenge']['id']
+        sms = input("SMS Code: ")
+        data_resp = {
+            'response': sms
+        }
+        resp = self.session.post(Url.challenge(c_id), data=json.dumps(data_resp), headers={'Content-Type': 'application/json'})
+        if Client.DEBUG:
+            Client.log_response(resp)
+        # successful challenge accepted
+        if resp.status_code is not 200:
+            # possibly throw an exception instead
+            print('Wrong SMS code, login failed.')
+        else:
+            resp = self.session.post(Url.login(), data=json.dumps(data), headers={'Content-Type': 'application/json', 'X-ROBINHOOD-CHALLENGE-RESPONSE-ID': c_id})
+            if Client.DEBUG:
+                Client.log_response(resp)
+            if resp.status_code is not 200:
+                # possibly throw exception instead
+                print('login failed')
+                return
+            obj = json.loads(resp.text)
+            self.refresh_token                      = obj['refresh_token']
+            self.session.headers['Authorization']   = 'Bearer ' + obj['access_token']
+            self.logged_in = True
+            # make account request to get current info
+            self.account = self.account_info()['results'][0]
+    
+    '''
+    login: make login request, and then get account info (ignore if logged in already)
+    username: "test@mail.com"
+    password: "password"
+    '''
+    def login(self, username, password):
+        if self.logged_in:
+            return
+        device_token = ""
+        self.get_device_token()
+        self.sms_confirm(username, password)
+        ###### INSECURE LOGIN, FILE SAVED LOCALLY. POTENTIALLY MALICIOUS APPLICATIONS CAN FIND THIS FILE ######
+        # TODO ENCRYPT/DECRYPT CONFIGURATION FILE
+        if Client.INSECURE:
+            config = Configuration()
+            config.username = username
+            config.password = password
+            config.device_id = self.session.cookies.get_dict()['device_id']
+            with open('configuration.pkl', 'wb') as f:
+                pickle.dump(config, f, pickle.HIGHEST_PROTOCOL)
+        
+    '''
+    Insecure login
+    '''
+    def insecure_login(self):
+        if not Client.INSECURE:
+            return
+        ###### INSECURE LOGIN, FILE SAVED LOCALLY. POTENTIALLY MALICIOUS APPLICATIONS CAN FIND THIS FILE ######
+        config = None
+        try:
+            with open('configuration.pkl', 'rb') as f:
+                config = pickle.load(f)
+        except FileNotFoundError:
+            self.prompt_login()
+            return
+        self.session.cookies['device_id'] = config.device_id
+        data = {
+            "grant_type":"password",
+            "scope":"internal",
+            "client_id":self.client_id,
+            "expires_in":86400,
+            # Device token should be user-input
+            "device_token":self.session.cookies.get_dict()['device_id'],
+            "username":config.username,
+            "password":config.password
+        }
+
         resp = self.session.post(Url.login(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
         if Client.DEBUG:
             Client.log_response(resp)

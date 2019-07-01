@@ -6,6 +6,9 @@ class Url:
     def book(s_id):
         return Url.api + '/marketdata/pricebook/snapshots/' + s_id + '/'
     
+    def challenge(c_id):
+        return Url.api + "/challenge/" + c_id + "/respond/"
+    
     def instruments(symbol):
         return Url.api + "/instruments/?symbol=" + symbol
     
