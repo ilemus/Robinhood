@@ -35,7 +35,7 @@ class Robinhood:
         self.client.sell(symbol, quantity, extended, cancel)
     
     def limit_sell(self, symbol, price, quantity, extended=False, cancel=None):
-        self.client.limit_sell(symbol, price, quantity, extened, cancel)
+        self.client.limit_sell(symbol, price, quantity, extended, cancel)
     
     def cancel_order(self):
         length = len(self.client.pending_orders)
