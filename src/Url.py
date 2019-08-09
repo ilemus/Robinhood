@@ -9,6 +9,9 @@ class Url:
     def challenge(c_id):
         return Url.api + "/challenge/" + c_id + "/respond/"
     
+    def historical(symbol, interval, span):
+        return Url.api + "/marketdata/historicals/" + symbol + "/?bounds=trading&interval=" + interval + "minute&span=" + span
+    
     def instruments(symbol):
         return Url.api + "/instruments/?symbol=" + symbol
     

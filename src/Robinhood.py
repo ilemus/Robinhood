@@ -47,7 +47,8 @@ class Robinhood:
         else:
             for i in range(0, len(self.client.pending_orders)):
                 # SYMBOL\tquantity\tprice
-                print(str(i) + ": " + self.client.get_symbol_from_instrument(self.client.pending_orders[i]["instrument"]) \
+                print(str(i) + ": " + self.client.pending_orders[i]["side"] \
+                      + "\t" + self.client.get_symbol_from_instrument(self.client.pending_orders[i]["instrument"]) \
                       + "\t" + str(int(float(self.client.pending_orders[i]["quantity"]))) \
                       + "\t" + str(float(self.client.pending_orders[i]["price"])))
             num = int(input("Enter order number to cancel: "))
@@ -56,6 +57,9 @@ class Robinhood:
             else:
                 print("Forbidden order number: " + str(num))
             
+    def get_total(self):
+        acct = self.client.account_info()
+        return float(acct['results'][0]['cash']) + float(acct['results'][0]['unsettled_funds']) + float(acct['results'][0]['uncleared_deposits'])
     
     def logout(self):
         self.client.logout()

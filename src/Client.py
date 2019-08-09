@@ -13,10 +13,11 @@ class Quote:
         self.bid_size = obj['bid_size']
         self.ask_price = float(obj['ask_price'])
         self.ask_size = obj['ask_size']
+        self.prev_close = float(obj['adjusted_previous_close'])
         
     def __str__(self):
         return "{ " + "price: " + str(self.price) + ", bid_price: " + str(self.bid_price) + ", bid_size: " \
-            + str(self.bid_size) + ", ask_price: " + str(self.ask_price) + ", ask_size: " + str(self.ask_size) + " }"
+            + str(self.bid_size) + ", ask_price: " + str(self.ask_price) + ", ask_size: " + str(self.ask_size) + ", prev_close: " + str(self.prev_close) + " }"
 
 class Configuration:
     def __init__(self):
@@ -68,7 +69,14 @@ class Client(ApiBase):
             "password":password,
             "challenge_type": "sms"
         }
-        resp = self.session.post(Url.login(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
+        string = json.dumps(data)
+        if Client.DEBUG:
+            print(Url.login())
+            print(self.session.headers)
+            print(string)
+            print(len(string))
+        
+        resp = self.session.post(Url.login(), data=string, headers={'Content-Type': 'application/json', 'Content-Length': str(len(string))})
         if Client.DEBUG:
             Client.log_response(resp)
         # when login fails, 400 error code is returned
@@ -225,9 +233,11 @@ class Client(ApiBase):
             print(data)
         
         resp = self.session.post(Url.order(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
-        self.pending_orders.append(json.loads(resp.text))
+        obj = json.loads(resp.text)
+        self.pending_orders.append(obj)
         if Client.DEBUG:
             Client.log_response(resp)
+        return obj
     
     def buy(self, symbol, quantity, extended=False, cancel=None):
         if not self.logged_in:
@@ -237,10 +247,8 @@ class Client(ApiBase):
         instrument = self.get_instrument(symbol)
         if cancel is None:
             cancel = "gfd"
-        price = float(self.get_quote(symbol).price)
         data = {
             "time_in_force":cancel,
-            "price":"{0:.2f}".format(price),
             "quantity":quantity,
             "side":"buy",
             "trigger":"immediate",
@@ -255,9 +263,11 @@ class Client(ApiBase):
             print(data)
         
         resp = self.session.post(Url.order(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
-        self.pending_orders.append(json.loads(resp.text))
+        obj = json.loads(resp.text)
+        self.pending_orders.append(obj)
         if Client.DEBUG:
             Client.log_response(resp)
+        return obj
     
     def limit_sell(self, symbol, price, quantity, extended=False, cancel=None):
         if not self.logged_in:
@@ -284,9 +294,11 @@ class Client(ApiBase):
             print(data)
         
         resp = self.session.post(Url.order(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
-        self.pending_orders.append(json.loads(resp.text))
+        obj = json.loads(resp.text)
+        self.pending_orders.append(obj)
         if Client.DEBUG:
             Client.log_response(resp)
+        return obj
     
     def sell(self, symbol, quantity, extended=False, cancel=None):
         if not self.logged_in:
@@ -296,11 +308,9 @@ class Client(ApiBase):
         instrument = self.get_instrument(symbol)
         if cancel is None:
             cancel = "gfd"
-        price = float(self.get_quote(symbol).price)
         
         data = {
             "time_in_force":cancel,
-            "price":"{0:.2f}".format(price),
             "quantity":quantity,
             "side":"sell",
             "trigger":"immediate",
@@ -315,9 +325,11 @@ class Client(ApiBase):
             print(data)
         
         resp = self.session.post(Url.order(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
-        self.pending_orders.append(json.loads(resp.text))
+        obj = json.loads(resp.text)
+        self.pending_orders.append(obj)
         if Client.DEBUG:
             Client.log_response(resp)
+        return obj
     
     def get_instrument(self, symbol):
         if symbol in self.instruments.keys():
@@ -363,6 +375,42 @@ class Client(ApiBase):
         if Client.DEBUG:
             Client.log_response(resp)
         return Quote(json.loads(resp.text))
+    
+    # https://api.robinhood.com/marketdata/historicals/SPY/?bounds=trading&interval=5minute&span=day
+    # symbol = "SPY"
+    # interval = 5, 10, 15...
+    # span = day, month, year
+    '''
+    {
+        "quote":"https://api.robinhood.com/quotes/8f92e76f-1e0e-4478-8580-16a6ffcfaef5/",
+        "symbol":"SPY",
+        "interval":"5minute",
+        "span":"day",
+        "bounds":"trading",
+        "previous_close_price":"292.620000",
+        "previous_close_time":"2019-08-02T20:00:00Z",
+        "open_price":"288.200000",
+        "open_time":"2019-08-05T13:00:00Z",
+        "instrument":"https://api.robinhood.com/instruments/8f92e76f-1e0e-4478-8580-16a6ffcfaef5/",
+        "historicals":
+        [{
+            "begins_at":"2019-08-05T13:00:00Z",
+            "open_price":"288.200000",
+            "close_price":"288.190000",
+            "high_price":"288.240000",
+            "low_price":"287.970000",
+            "volume":74159,
+            "session":"pre",
+            "interpolated":false
+        }]
+    }
+    '''
+    def get_historical(self, symbol, interval, span):
+        symbol = symbol.upper()
+        resp = self.session.get(Url.historical(symbol, interval, span))
+        if Client.DEBUG:
+            Client.log_response(resp)
+        return json.loads(resp.text)
     
     '''
     'bids' {
