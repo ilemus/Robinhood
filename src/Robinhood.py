@@ -23,7 +23,8 @@ class Robinhood:
             symbol = self.client.get_symbol_from_instrument(p['instrument'])
             quantity = int(float(p['quantity']))
             price = float(p['average_buy_price'])
-            print("{}\t{}\t{}".format(symbol, quantity, price))
+            current_price = self.client.get_price(symbol).price
+            print("{}\t{}\t{}\t{}".format(symbol, quantity, price, current_price))
     
     def buy(self, symbol, quantity, extended=False, cancel=None):
         self.client.buy(symbol, quantity, extended, cancel)
