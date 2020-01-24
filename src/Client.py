@@ -76,7 +76,7 @@ class Client(ApiBase):
             print(string)
             print(len(string))
         
-        resp = self.session.post(Url.login(), data=string, verify='/etc/ssl/certs/cert_MTCA-CA.pem', headers={'Content-Type': 'application/json', 'Content-Length': str(len(string))})
+        resp = self.session.post(Url.login(), data=string, headers={'Content-Type': 'application/json', 'Content-Length': str(len(string))})
         if Client.DEBUG:
             Client.log_response(resp)
         # when login fails, 400 error code is returned
@@ -89,7 +89,7 @@ class Client(ApiBase):
         data_resp = {
             'response': sms
         }
-        resp = self.session.post(Url.challenge(c_id), data=json.dumps(data_resp), verify='/etc/ssl/certs/cert_MTCA-CA.pem', headers={'Content-Type': 'application/json'})
+        resp = self.session.post(Url.challenge(c_id), data=json.dumps(data_resp), headers={'Content-Type': 'application/json'})
         if Client.DEBUG:
             Client.log_response(resp)
         # successful challenge accepted
@@ -97,7 +97,7 @@ class Client(ApiBase):
             # possibly throw an exception instead
             print('Wrong SMS code, login failed.')
         else:
-            resp = self.session.post(Url.login(), data=json.dumps(data), verify='/etc/ssl/certs/cert_MTCA-CA.pem', headers={'Content-Type': 'application/json', 'X-ROBINHOOD-CHALLENGE-RESPONSE-ID': c_id})
+            resp = self.session.post(Url.login(), data=json.dumps(data), headers={'Content-Type': 'application/json', 'X-ROBINHOOD-CHALLENGE-RESPONSE-ID': c_id})
             if Client.DEBUG:
                 Client.log_response(resp)
             if resp.status_code is not 200:
@@ -158,7 +158,7 @@ class Client(ApiBase):
             "password":config.password
         }
 
-        resp = self.session.post(Url.login(), data=json.dumps(data), verify='/etc/ssl/certs/cert_MTCA-CA.pem', headers={'Content-Type': 'application/json'})
+        resp = self.session.post(Url.login(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
         if Client.DEBUG:
             Client.log_response(resp)
         if resp.status_code is not 200:
@@ -179,7 +179,7 @@ class Client(ApiBase):
     def account_info(self):
         if not self.logged_in:
             return None
-        resp = self.session.get(Url.accounts(), verify='/etc/ssl/certs/cert_MTCA-CA.pem')
+        resp = self.session.get(Url.accounts())
         if Client.DEBUG:
             Client.log_response(resp)
         return json.loads(resp.text)
@@ -232,7 +232,7 @@ class Client(ApiBase):
         if Client.DEBUG:
             print(data)
         
-        resp = self.session.post(Url.order(), data=json.dumps(data), verify='/etc/ssl/certs/cert_MTCA-CA.pem', headers={'Content-Type': 'application/json'})
+        resp = self.session.post(Url.order(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
         obj = json.loads(resp.text)
         self.pending_orders.append(obj)
         if Client.DEBUG:
@@ -262,7 +262,7 @@ class Client(ApiBase):
         if Client.DEBUG:
             print(data)
         
-        resp = self.session.post(Url.order(), data=json.dumps(data), verify='/etc/ssl/certs/cert_MTCA-CA.pem', headers={'Content-Type': 'application/json'})
+        resp = self.session.post(Url.order(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
         obj = json.loads(resp.text)
         self.pending_orders.append(obj)
         if Client.DEBUG:
@@ -293,7 +293,7 @@ class Client(ApiBase):
         if Client.DEBUG:
             print(data)
         
-        resp = self.session.post(Url.order(), data=json.dumps(data), verify='/etc/ssl/certs/cert_MTCA-CA.pem', headers={'Content-Type': 'application/json'})
+        resp = self.session.post(Url.order(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
         obj = json.loads(resp.text)
         self.pending_orders.append(obj)
         if Client.DEBUG:
@@ -324,7 +324,7 @@ class Client(ApiBase):
         if Client.DEBUG:
             print(data)
         
-        resp = self.session.post(Url.order(), data=json.dumps(data), verify='/etc/ssl/certs/cert_MTCA-CA.pem', headers={'Content-Type': 'application/json'})
+        resp = self.session.post(Url.order(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
         obj = json.loads(resp.text)
         self.pending_orders.append(obj)
         if Client.DEBUG:
@@ -335,7 +335,7 @@ class Client(ApiBase):
         if symbol in self.instruments.keys():
             return self.instruments[symbol]
         else:
-            resp = self.session.get(Url.instruments(symbol=symbol), verify='/etc/ssl/certs/cert_MTCA-CA.pem')
+            resp = self.session.get(Url.instruments(symbol=symbol))
             if Client.DEBUG:
                 Client.log_response(resp)
             obj = json.loads(resp.text)
@@ -371,7 +371,7 @@ class Client(ApiBase):
         self.get_instrument(symbol)
         # stock_ids is updated
         s_id = self.stock_ids[symbol]
-        resp = self.session.get(Url.quote(s_id), verify='/etc/ssl/certs/cert_MTCA-CA.pem')
+        resp = self.session.get(Url.quote(s_id))
         if Client.DEBUG:
             Client.log_response(resp)
         return Quote(json.loads(resp.text))
@@ -407,7 +407,7 @@ class Client(ApiBase):
     '''
     def get_historical(self, symbol, interval, span):
         symbol = symbol.upper()
-        resp = self.session.get(Url.historical(symbol, interval, span), verify='/etc/ssl/certs/cert_MTCA-CA.pem')
+        resp = self.session.get(Url.historical(symbol, interval, span))
         if Client.DEBUG:
             Client.log_response(resp)
         return json.loads(resp.text)
@@ -425,7 +425,7 @@ class Client(ApiBase):
             return None
         symbol = symbol.upper()
         self.get_instrument(symbol)
-        resp = self.session.get(Url.book(self.stock_ids[symbol]), verify='/etc/ssl/certs/cert_MTCA-CA.pem')
+        resp = self.session.get(Url.book(self.stock_ids[symbol]))
         if Client.DEBUG:
             Client.log_response(resp)
         return json.loads(resp.text)
@@ -465,7 +465,7 @@ class Client(ApiBase):
         if string in self.symbols.keys():
             return self.symbols[string]
         else:
-            resp = self.session.get(instrument, verify='/etc/ssl/certs/cert_MTCA-CA.pem')
+            resp = self.session.get(instrument)
             if Client.DEBUG:
                 Client.log_response(resp)
             obj = json.loads(resp.text)
