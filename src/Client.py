@@ -2,9 +2,11 @@ import requests
 import json
 import getpass
 import pickle
+import random
 
-from src.ApiBase import ApiBase
-from src.Url import Url
+from ApiBase import ApiBase
+from Url import Url
+
 
 class Quote:
     def __init__(self, obj):
@@ -19,11 +21,32 @@ class Quote:
         return "{ " + "price: " + str(self.price) + ", bid_price: " + str(self.bid_price) + ", bid_size: " \
             + str(self.bid_size) + ", ask_price: " + str(self.ask_price) + ", ask_size: " + str(self.ask_size) + ", prev_close: " + str(self.prev_close) + " }"
 
+
 class Configuration:
     def __init__(self):
         self.username = None
         self.password = None
         self.device_id = None
+    
+    
+def gen_token():
+    str = ""
+    for i in range(0, 8):
+        str += "{:01x}".format(random.randint(0, 15))
+    str += "-"
+    for i in range(0, 4):
+        str += "{:01x}".format(random.randint(0, 15))
+    str += "-"
+    for i in range(0, 4):
+        str += "{:01x}".format(random.randint(0, 15))
+    str += "-"
+    for i in range(0, 4):
+        str += "{:01x}".format(random.randint(0, 15))
+    str += "-"
+    for i in range(0, 12):
+        str += "{:01x}".format(random.randint(0, 15))
+    return str
+
     
 class Client(ApiBase):
     DEBUG = False
@@ -49,6 +72,7 @@ class Client(ApiBase):
         self.stock_ids = {}
         self.symbols = {}
         self.pending_orders = []
+        self.device_id = gen_token()
         # print('constructed ' + Client.VERSION)
     
     def get_device_token(self):
@@ -64,7 +88,7 @@ class Client(ApiBase):
             "client_id":self.client_id,
             "expires_in":86400,
             # Device token should be user-input
-            "device_token":self.session.cookies.get_dict()['device_id'],
+            "device_token":self.device_id,
             "username":username,
             "password":password,
             "challenge_type": "sms"
@@ -120,7 +144,7 @@ class Client(ApiBase):
         if self.logged_in:
             return
         device_token = ""
-        self.get_device_token()
+        # self.get_device_token()
         self.sms_confirm(username, password)
         ###### INSECURE LOGIN, FILE SAVED LOCALLY. POTENTIALLY MALICIOUS APPLICATIONS CAN FIND THIS FILE ######
         # TODO ENCRYPT/DECRYPT CONFIGURATION FILE
@@ -128,7 +152,6 @@ class Client(ApiBase):
             config = Configuration()
             config.username = username
             config.password = password
-            config.device_id = self.session.cookies.get_dict()['device_id']
             with open('configuration.pkl', 'wb') as f:
                 pickle.dump(config, f, pickle.HIGHEST_PROTOCOL)
         
@@ -146,14 +169,14 @@ class Client(ApiBase):
         except FileNotFoundError:
             self.prompt_login()
             return
-        self.session.cookies['device_id'] = config.device_id
+        self.session.cookies['device_id'] = self.device_id
         data = {
             "grant_type":"password",
             "scope":"internal",
             "client_id":self.client_id,
             "expires_in":86400,
             # Device token should be user-input
-            "device_token":self.session.cookies.get_dict()['device_id'],
+            "device_token":self.device_id,
             "username":config.username,
             "password":config.password
         }

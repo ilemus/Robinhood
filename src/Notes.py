@@ -3,8 +3,8 @@ import json
 import getpass
 import pickle
 
-from src.ApiBase import ApiBase
-from src.Url import Url
+from ApiBase import ApiBase
+from Url import Url
 
 class Quote:
     def __init__(self, obj):
