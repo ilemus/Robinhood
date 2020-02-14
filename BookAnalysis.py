@@ -1,3 +1,6 @@
+import datetime
+from time import sleep
+
 
 class BookAnalyzer:
     def __init__(self):
@@ -83,10 +86,52 @@ class BookAnalyzer:
     def print_spread(self):
         for row in self.history:
             print(str(row[1][0][0]) + "\t" + str(row[2][0][0]))
+
+
+# Used to generate .book files
+class BookLogger:
+    def __init__(self, client, reps=10, delay=1):
+        self.client = client
+        if not self.client.logged_in:
+            raise Exception('Need to login to client')
+        # how many rows there will be
+        self.reps = reps
+        # how frequent to query the book in seconds
+        self.delay = delay
+    
+    # Creates a file named 'aapl.book' or if id is given it will be (id='_3') 'aapl_3.book'
+    # Format of file is:
+    # [time] [bid -1 (price, size)] ... [bid -9 (price, size)] [bid -10 (price, size)] [ask +1 (price, size)] ... [ask +9 (price, size)] [ask +10 (price, size)]
+    def collect(self, ticker, id=''):
+        f = open(ticker + id + '.book', 'w')
         
+        count = 0
+        while count < self.reps:
+            obj = self.client.get_book(ticker)
+            bids = [(float(b['price']['amount']), int(b['quantity'])) for b in obj['bids'][:10]]
+            asks = [(float(b['price']['amount']), int(b['quantity'])) for b in obj['asks'][:10]]
+            time = datetime.datetime.now().strftime("%H:%M:%S")
+            row = [str(time)]
+            row += bids + asks
+            
+            result = row[0]
+            for r in row[1:]:
+                result += " {},{}".format(r[0], r[1])
+            
+            result += '\n'
+            f.write(result)
+            count += 1
+            if count >= self.reps:
+                break
+            sleep(self.delay)
+        
+        f.close()
+
+'''        
 if __name__ == "__main__":
     ba = BookAnalyzer()
     ba.load_data("uber.book")
     ba.set_ratio()
     # ba.assume_ratio_changes()
+'''
     
