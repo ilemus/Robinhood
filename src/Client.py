@@ -4,8 +4,8 @@ import getpass
 import pickle
 import random
 
-from ApiBase import ApiBase
-from Url import Url
+from src.ApiBase import ApiBase
+from src.Url import Url
 
 
 class Quote:

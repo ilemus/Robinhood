@@ -127,6 +127,26 @@ class BookLogger:
         
         f.close()
 
+
+class SlimBook(BookLogger):
+    def collect(self, ticker, id=''):
+        f = open(ticker + id + '.book', 'w')
+        
+        count = 0
+        while count < self.reps:
+            obj = self.client.get_quote(ticker)
+            time = datetime.datetime.now().strftime("%H:%M:%S")
+            
+            result = time + " {},{}".format(obj.bid_price, obj.bid_size) + " {},{}".format(obj.ask_price, obj.ask_size) + '\n'
+            
+            f.write(result)
+            count += 1
+            if count >= self.reps:
+                break
+            sleep(self.delay)
+        
+        f.close()
+
 '''        
 if __name__ == "__main__":
     ba = BookAnalyzer()
