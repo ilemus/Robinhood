@@ -2,7 +2,6 @@ import requests
 import json
 import getpass
 import pickle
-import random
 
 from src.ApiBase import ApiBase
 from src.Url import Url
@@ -28,33 +27,9 @@ class Configuration:
         self.password = None
         self.device_id = None
     
-    
-def gen_token():
-    str = ""
-    for i in range(0, 8):
-        str += "{:01x}".format(random.randint(0, 15))
-    str += "-"
-    for i in range(0, 4):
-        str += "{:01x}".format(random.randint(0, 15))
-    str += "-"
-    for i in range(0, 4):
-        str += "{:01x}".format(random.randint(0, 15))
-    str += "-"
-    for i in range(0, 4):
-        str += "{:01x}".format(random.randint(0, 15))
-    str += "-"
-    for i in range(0, 12):
-        str += "{:01x}".format(random.randint(0, 15))
-    return str
-
-    
 class Client(ApiBase):
-    DEBUG = False
-    INSECURE = False
-    VERSION = "1.0"
-
     def __init__(self):
-        self.session = requests.Session()
+        super().__init__(self)
         self.session.headers = {
             'Accept': '*/*',
             'Accept-Language': 'en-US,en;q=0.5',
@@ -67,12 +42,10 @@ class Client(ApiBase):
         self.client_id = "c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS"
         self.refresh_token = None
         self.account = None
-        self.logged_in = False
         self.instruments = {}
         self.stock_ids = {}
         self.symbols = {}
         self.pending_orders = []
-        self.device_id = gen_token()
         # print('constructed ' + Client.VERSION)
     
     def get_device_token(self):

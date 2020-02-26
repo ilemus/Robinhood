@@ -1,6 +1,34 @@
 import getpass
+import random
 
 class ApiBase:
+    DEBUG = False
+    INSECURE = False
+    VERSION = "1.0"
+    
+    def gen_client():
+        str = ""
+        for i in range(0, 8):
+            str += "{:01x}".format(random.randint(0, 15))
+        str += "-"
+        for i in range(0, 4):
+            str += "{:01x}".format(random.randint(0, 15))
+        str += "-"
+        for i in range(0, 4):
+            str += "{:01x}".format(random.randint(0, 15))
+        str += "-"
+        for i in range(0, 4):
+            str += "{:01x}".format(random.randint(0, 15))
+        str += "-"
+        for i in range(0, 12):
+            str += "{:01x}".format(random.randint(0, 15))
+        return str
+    
+    def __init__(self):
+        self.session = requests.Session()
+        self.logged_in = False
+        self.device_id = get_client()
+    
     def prompt_login(self):
         self.login(input("Username: "), getpass.getpass())
     
