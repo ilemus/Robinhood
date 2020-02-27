@@ -1,5 +1,6 @@
 class Url:
     api = 'https://api.robinhood.com'
+
     def accounts():
         return Url.api + '/accounts/'
     

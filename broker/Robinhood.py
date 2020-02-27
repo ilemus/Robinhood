@@ -1,5 +1,3 @@
-from src.Client import Client
-
 class Robinhood:
     def __init__(self, client):
         self.client = client

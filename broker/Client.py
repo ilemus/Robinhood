@@ -1,10 +1,8 @@
-import requests
 import json
-import getpass
 import pickle
 
-from src.ApiBase import ApiBase
-from src.Url import Url
+from broker.ApiBase import ApiBase
+from broker.robinhood_url import Url
 
 
 class Quote:
@@ -26,10 +24,11 @@ class Configuration:
         self.username = None
         self.password = None
         self.device_id = None
-    
+
+
 class Client(ApiBase):
     def __init__(self):
-        super().__init__(self)
+        super().__init__()
         self.session.headers = {
             'Accept': '*/*',
             'Accept-Language': 'en-US,en;q=0.5',
