@@ -1,11 +1,14 @@
 import getpass
 import random
+import requests
+
 
 class ApiBase:
     DEBUG = False
     INSECURE = False
     VERSION = "1.0"
-    
+
+    @staticmethod
     def gen_client():
         str = ""
         for i in range(0, 8):
@@ -27,7 +30,7 @@ class ApiBase:
     def __init__(self):
         self.session = requests.Session()
         self.logged_in = False
-        self.device_id = get_client()
+        self.device_id = ApiBase.gen_client()
     
     def prompt_login(self):
         self.login(input("Username: "), getpass.getpass())
@@ -42,7 +45,7 @@ class ApiBase:
         pass
     
     # Market buy
-    def buy(self, symbol, quantity, extened=False):
+    def buy(self, symbol, quantity, extended=False):
         pass
     
     def limit_buy(self, symbol, price, quantity, extended=False, cancel=None):
