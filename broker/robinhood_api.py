@@ -1,12 +1,13 @@
 import json
 import pickle
 
-from broker.api_base import ApiBase, Configuration
+from broker.api_base import ApiBase, Configuration, Quote
 from broker.robinhood_url import Url
 
 
-class Quote:
+class RQuote(Quote):
     def __init__(self, obj):
+        super().__init__()
         self.price = float(obj['last_trade_price'])
         self.bid_price = float(obj['bid_price'])
         self.bid_size = obj['bid_size']
@@ -334,7 +335,7 @@ class Client(ApiBase):
             return url
     
     '''
-    get_quote: returns quote
+    get_quote: returns Quote
     symbol: Tradable stock symbol name
     {
       "ask_price": "48.190000",
@@ -362,7 +363,7 @@ class Client(ApiBase):
         resp = self.session.get(Url.quote(s_id))
         if Client.DEBUG:
             Client.log_response(resp)
-        return Quote(json.loads(resp.text))
+        return RQuote(json.loads(resp.text))
     
     # https://api.robinhood.com/marketdata/historicals/SPY/?bounds=trading&interval=5minute&span=day
     # symbol = "SPY"

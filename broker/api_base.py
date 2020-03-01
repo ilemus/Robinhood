@@ -10,6 +10,20 @@ class Configuration:
         self.device_id = None
 
 
+class Quote:
+    """
+    Used as a base class for quote type.
+    Implementations can reimplement the constructor to parse quote objects
+    """
+    def __init__(self):
+        # Last traded price
+        self.price = 0.0
+        self.bid_price = 0.0
+        self.bid_size = 0
+        self.ask_price = 0.0
+        self.ask_size = 0
+
+
 class ApiBase:
     DEBUG = False
     INSECURE = False
