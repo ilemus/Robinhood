@@ -76,7 +76,7 @@ class Client(ApiBase):
         if Client.DEBUG:
             Client.log_response(resp)
         # when login fails, 400 error code is returned
-        if resp.status_code is 200:
+        if resp.status_code == 200:
             return
         
         obj = json.loads(resp.text)
@@ -89,14 +89,14 @@ class Client(ApiBase):
         if Client.DEBUG:
             Client.log_response(resp)
         # successful challenge accepted
-        if resp.status_code is not 200:
+        if resp.status_code != 200:
             # possibly throw an exception instead
             print('Wrong SMS code, login failed.')
         else:
             resp = self.session.post(Url.login(), data=json.dumps(data), headers={'Content-Type': 'application/json', 'X-ROBINHOOD-CHALLENGE-RESPONSE-ID': c_id})
             if Client.DEBUG:
                 Client.log_response(resp)
-            if resp.status_code is not 200:
+            if resp.status_code != 200:
                 # possibly throw exception instead
                 print('login failed')
                 return
@@ -156,7 +156,7 @@ class Client(ApiBase):
         resp = self.session.post(Url.login(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
         if Client.DEBUG:
             Client.log_response(resp)
-        if resp.status_code is not 200:
+        if resp.status_code != 200:
             # possibly throw exception instead
             print('login failed')
             return
