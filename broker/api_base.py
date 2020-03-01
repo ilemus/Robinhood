@@ -3,6 +3,13 @@ import random
 import requests
 
 
+class Configuration:
+    def __init__(self):
+        self.username = None
+        self.password = None
+        self.device_id = None
+
+
 class ApiBase:
     DEBUG = False
     INSECURE = False
@@ -36,6 +43,9 @@ class ApiBase:
         self.login(input("Username: "), getpass.getpass())
     
     def login(self, username, password):
+        pass
+
+    def insecure_login(self):
         pass
     
     def account_info(self):

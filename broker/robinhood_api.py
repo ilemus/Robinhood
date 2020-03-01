@@ -1,7 +1,7 @@
 import json
 import pickle
 
-from broker.ApiBase import ApiBase
+from broker.api_base import ApiBase, Configuration
 from broker.robinhood_url import Url
 
 
@@ -17,13 +17,6 @@ class Quote:
     def __str__(self):
         return "{ " + "price: " + str(self.price) + ", bid_price: " + str(self.bid_price) + ", bid_size: " \
             + str(self.bid_size) + ", ask_price: " + str(self.ask_price) + ", ask_size: " + str(self.ask_size) + ", prev_close: " + str(self.prev_close) + " }"
-
-
-class Configuration:
-    def __init__(self):
-        self.username = None
-        self.password = None
-        self.device_id = None
 
 
 class Client(ApiBase):
