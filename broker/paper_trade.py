@@ -1,4 +1,5 @@
 from .api_base import ApiBase
+import datetime
 
 
 class Client(ApiBase):
@@ -9,8 +10,9 @@ class Client(ApiBase):
         portfolio: structured as follows:
             {
                 "symbol": string,
-                "purchase_price": float,
-                "purchase_date": string ("MM/DD/YY HH:MM:SS.sss Z")
+                "price": float,
+                "quantity": int,
+                "purchase_date": string ("MM/DD/YYYY HH:MM:SS.sss Z")
             }
         """
         self._account = {
@@ -23,9 +25,32 @@ class Client(ApiBase):
         super().__init__()
 
     def _update_total(self):
-        self._account['total'] = self._account['cash']\
+        self._account['total'] = self._account['cash'] \
                                  + (0.0 if self._account['portfolio'] is None
-                                    else sum(self.get_quote(v['symbol']).price for v in self._account['portfolio']))
+                                    else sum(self.get_quote(v['symbol']).price * v['quantity']
+                                             for v in self._account['portfolio']))
 
     def get_quote(self, symbol):
-        self.client.get_quote(symbol)
+        return self.client.get_quote(symbol)
+
+    def buy(self, symbol, quantity, extended=False):
+        quote = self.get_quote(symbol)
+        if quote is None:
+            print("Cannot retrieve quote for {}".format(symbol))
+            return
+        total = quote.price * quantity
+        if total > self._account['cash']:
+            # format string for $
+            print("Not enough funds in account to buy {} shares of {} at ${}".format(quantity, symbol, quote.price))
+            return
+
+        if self._account['portfolio'] is None:
+            self._account['portfolio'] = []
+        now = datetime.datetime.now()
+        self._account['portfolio'].append({
+            "symbol": symbol,
+            "price": quote.price,
+            "quantity": quantity,
+            "purchase_date": now.strftime("%d/%m/%Y %H:%M:%S.%f")[:-3] + now.strftime(" %Z")
+        })
+        self._account['cash'] -= total

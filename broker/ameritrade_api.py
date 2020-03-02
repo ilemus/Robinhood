@@ -1,9 +1,24 @@
 from .ameritrade_url import Url
-from .api_base import ApiBase, Configuration
+from .api_base import ApiBase, Configuration, Quote
 from ssl import SSLError
 import time
 import requests
 import pickle
+import json
+
+
+class AQuote(Quote):
+    def __init__(self, obj):
+        super().__init__()
+        self.price = obj['lastPrice']
+        if 'askPrice' in obj:
+            self.ask_price = obj['askPrice']
+        if 'askSize' in obj:
+            self.ask_size = obj['askSize']
+        if 'bidPrice' in obj:
+            self.bid_price = obj['bidPrice']
+        if 'bidSize' in obj:
+            self.bid_size = obj['bidSize']
 
 
 class Client(ApiBase):
@@ -24,7 +39,6 @@ class Client(ApiBase):
         post -> https://api.tdameritrade.com/v1/oauth2/token
     '''
     def login(self, username, password):
-        #https://auth.tdameritrade.com/auth?response_type=code&redirect_uri=https://localhost&client_id=QOPIXDKLBHG6PXRAHNFCR1LC58ZMMFHX@AMER.OAUTHAP
         params = {
             "response_type": "code",
             "redirect_uri": "http://localhost:80",
@@ -72,6 +86,7 @@ class Client(ApiBase):
             with open('configuration.pkl', 'wb') as f:
                 pickle.dump(config, f, pickle.HIGHEST_PROTOCOL)
 
+    # Login with already logged in credentials. Do not distribute configuration.pkl
     def insecure_login(self):
         if not Client.INSECURE:
             return
@@ -84,6 +99,14 @@ class Client(ApiBase):
 
         self.device_id = config.device_id
         self.login(config.username, config.password)
+
+    # https://developer.tdameritrade.com/quotes/apis/get/marketdata/%7Bsymbol%7D/quotes
+    def get_quote(self, symbol):
+        url = Url.quote().format(symbol)
+        response = self.session.get(url)
+        obj = json.loads(response.text)
+        quote = AQuote(obj)
+        return quote
 
 
 def pretty_print_post(req):

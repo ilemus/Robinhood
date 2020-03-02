@@ -16,8 +16,9 @@ class RQuote(Quote):
         self.prev_close = float(obj['adjusted_previous_close'])
         
     def __str__(self):
-        return "{ " + "price: " + str(self.price) + ", bid_price: " + str(self.bid_price) + ", bid_size: " \
-            + str(self.bid_size) + ", ask_price: " + str(self.ask_price) + ", ask_size: " + str(self.ask_size) + ", prev_close: " + str(self.prev_close) + " }"
+        return "{ " + "price: " + str(self.price) + ", bid_price: " + str(self.bid_price) + ", bid_size: "\
+            + str(self.bid_size) + ", ask_price: " + str(self.ask_price) + ", ask_size: " + str(self.ask_size)\
+            + ", prev_close: " + str(self.prev_close) + " }"
 
 
 class Client(ApiBase):
@@ -79,7 +80,10 @@ class Client(ApiBase):
         data_resp = {
             'response': sms
         }
-        resp = self.session.post(Url.challenge(c_id), data=json.dumps(data_resp), headers={'Content-Type': 'application/json'})
+        resp = self.session.post(
+            Url.challenge(c_id),
+            data=json.dumps(data_resp),
+            headers={'Content-Type': 'application/json'})
         if Client.DEBUG:
             Client.log_response(resp)
         # successful challenge accepted
@@ -87,7 +91,10 @@ class Client(ApiBase):
             # possibly throw an exception instead
             print('Wrong SMS code, login failed.')
         else:
-            resp = self.session.post(Url.login(), data=json.dumps(data), headers={'Content-Type': 'application/json', 'X-ROBINHOOD-CHALLENGE-RESPONSE-ID': c_id})
+            resp = self.session.post(
+                Url.login(),
+                data=json.dumps(data),
+                headers={'Content-Type': 'application/json', 'X-ROBINHOOD-CHALLENGE-RESPONSE-ID': c_id})
             if Client.DEBUG:
                 Client.log_response(resp)
             if resp.status_code != 200:
@@ -95,8 +102,8 @@ class Client(ApiBase):
                 print('login failed')
                 return
             obj = json.loads(resp.text)
-            self.refresh_token                      = obj['refresh_token']
-            self.session.headers['Authorization']   = 'Bearer ' + obj['access_token']
+            self.refresh_token = obj['refresh_token']
+            self.session.headers['Authorization'] = 'Bearer ' + obj['access_token']
             self.logged_in = True
             # make account request to get current info
             self.account = self.account_info()['results'][0]
@@ -112,7 +119,7 @@ class Client(ApiBase):
         device_token = ""
         # self.get_device_token()
         self.sms_confirm(username, password)
-        ###### INSECURE LOGIN, FILE SAVED LOCALLY. POTENTIALLY MALICIOUS APPLICATIONS CAN FIND THIS FILE ######
+        # INSECURE LOGIN, FILE SAVED LOCALLY. POTENTIALLY MALICIOUS APPLICATIONS CAN FIND THIS FILE ######
         # TODO ENCRYPT/DECRYPT CONFIGURATION FILE
         if Client.INSECURE:
             config = Configuration()
@@ -127,7 +134,7 @@ class Client(ApiBase):
     def insecure_login(self):
         if not Client.INSECURE:
             return
-        ###### INSECURE LOGIN, FILE SAVED LOCALLY. POTENTIALLY MALICIOUS APPLICATIONS CAN FIND THIS FILE ######
+        # INSECURE LOGIN, FILE SAVED LOCALLY. POTENTIALLY MALICIOUS APPLICATIONS CAN FIND THIS FILE ######
         config = None
         try:
             with open('configuration.pkl', 'rb') as f:
@@ -137,14 +144,14 @@ class Client(ApiBase):
             return
         self.session.cookies['device_id'] = self.device_id
         data = {
-            "grant_type":"password",
-            "scope":"internal",
-            "client_id":self.client_id,
-            "expires_in":86400,
+            "grant_type": "password",
+            "scope": "internal",
+            "client_id": self.client_id,
+            "expires_in": 86400,
             # Device token should be user-input
-            "device_token":self.device_id,
-            "username":config.username,
-            "password":config.password
+            "device_token": self.device_id,
+            "username": config.username,
+            "password": config.password
         }
 
         resp = self.session.post(Url.login(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
