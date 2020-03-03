@@ -1,19 +1,22 @@
 from .api_base import ApiBase
 import datetime
+import json
 
 
-class Client(ApiBase):
+class Paper(ApiBase):
     def __init__(self, client=None, cash=0.0, portfolio=None):
         """
         client: either Robinhood or TD Ameritrade account. The account must be logged in; used for getting price quotes.
         cash: available cash, default is 0.0
         portfolio: structured as follows:
-            {
-                "symbol": string,
-                "price": float,
-                "quantity": int,
-                "purchase_date": string ("MM/DD/YYYY HH:MM:SS.sss Z")
-            }
+            [
+                {
+                    "symbol": string,
+                    "price": float,
+                    "quantity": int,
+                    "purchase_date": string ("MM/DD/YYYY HH:MM:SS.sss Z")
+                }
+            ]
         """
         self._account = {
             "cash": cash,
@@ -54,3 +57,11 @@ class Client(ApiBase):
             "purchase_date": now.strftime("%d/%m/%Y %H:%M:%S.%f")[:-3] + now.strftime(" %Z")
         })
         self._account['cash'] -= total
+
+    def save(self):
+        with open('portfolio.json', 'w') as f:
+            json.dump(self._account, f)
+
+    def load(self):
+        with open('portfolio.json', 'r') as f:
+            self._account = json.loads(f)

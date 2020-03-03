@@ -21,7 +21,7 @@ class AQuote(Quote):
             self.bid_size = obj['bidSize']
 
 
-class Client(ApiBase):
+class Ameritrade(ApiBase):
     def __init__(self, client_id="QOPIXDKLBHG6PXRAHNFCR1LC58ZMMFHX"):
         super().__init__()
         self.session.headers = {
@@ -62,7 +62,7 @@ class Client(ApiBase):
             "authorize": "Log+in",
             "signed": "24879f023abdeabba9d2c75eb8198e78a7c7b428"
         }
-        if Client.DEBUG:
+        if Ameritrade.DEBUG:
             req = requests.Request('POST', Url.oauth(), params=params, headers=headers, data=payload)
             pretty_print_post(req)
 
@@ -78,7 +78,7 @@ class Client(ApiBase):
         print("Login successful.")
         self.logged_in = True
         # When we successfully we login we can save the user/pass insecurely. Please do not share configuration.pkl file
-        if Client.INSECURE:
+        if Ameritrade.INSECURE:
             config = Configuration()
             config.username = username
             config.password = password
@@ -88,7 +88,7 @@ class Client(ApiBase):
 
     # Login with already logged in credentials. Do not distribute configuration.pkl
     def insecure_login(self):
-        if not Client.INSECURE:
+        if not Ameritrade.INSECURE:
             return
         try:
             with open('configuration.pkl', 'rb') as f:

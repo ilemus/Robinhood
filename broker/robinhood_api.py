@@ -21,7 +21,7 @@ class RQuote(Quote):
             + ", prev_close: " + str(self.prev_close) + " }"
 
 
-class Client(ApiBase):
+class Robinhood(ApiBase):
     def __init__(self):
         super().__init__()
         self.session.headers = {
@@ -45,7 +45,7 @@ class Client(ApiBase):
     def get_device_token(self):
         # clientId: "abcd-1938adf-192398192afasd-1239a"
         resp = self.session.get(Url.login_page())
-        if Client.DEBUG:
+        if Robinhood.DEBUG:
             print(resp.status_code)
     
     def sms_confirm(self, username, password):
@@ -61,15 +61,15 @@ class Client(ApiBase):
             "challenge_type": "sms"
         }
         string = json.dumps(data)
-        if Client.DEBUG:
+        if Robinhood.DEBUG:
             print(Url.login())
             print(self.session.headers)
             print(string)
             print(len(string))
         
         resp = self.session.post(Url.login(), data=string, headers={'Content-Type': 'application/json', 'Content-Length': str(len(string))})
-        if Client.DEBUG:
-            Client.log_response(resp)
+        if Robinhood.DEBUG:
+            Robinhood.log_response(resp)
         # when login fails, 400 error code is returned
         if resp.status_code == 200:
             return
@@ -84,8 +84,8 @@ class Client(ApiBase):
             Url.challenge(c_id),
             data=json.dumps(data_resp),
             headers={'Content-Type': 'application/json'})
-        if Client.DEBUG:
-            Client.log_response(resp)
+        if Robinhood.DEBUG:
+            Robinhood.log_response(resp)
         # successful challenge accepted
         if resp.status_code != 200:
             # possibly throw an exception instead
@@ -95,8 +95,8 @@ class Client(ApiBase):
                 Url.login(),
                 data=json.dumps(data),
                 headers={'Content-Type': 'application/json', 'X-ROBINHOOD-CHALLENGE-RESPONSE-ID': c_id})
-            if Client.DEBUG:
-                Client.log_response(resp)
+            if Robinhood.DEBUG:
+                Robinhood.log_response(resp)
             if resp.status_code != 200:
                 # possibly throw exception instead
                 print('login failed')
@@ -121,7 +121,7 @@ class Client(ApiBase):
         self.sms_confirm(username, password)
         # INSECURE LOGIN, FILE SAVED LOCALLY. POTENTIALLY MALICIOUS APPLICATIONS CAN FIND THIS FILE ######
         # TODO ENCRYPT/DECRYPT CONFIGURATION FILE
-        if Client.INSECURE:
+        if Robinhood.INSECURE:
             config = Configuration()
             config.username = username
             config.password = password
@@ -132,7 +132,7 @@ class Client(ApiBase):
     Insecure login
     '''
     def insecure_login(self):
-        if not Client.INSECURE:
+        if not Robinhood.INSECURE:
             return
         # INSECURE LOGIN, FILE SAVED LOCALLY. POTENTIALLY MALICIOUS APPLICATIONS CAN FIND THIS FILE ######
         config = None
@@ -155,15 +155,15 @@ class Client(ApiBase):
         }
 
         resp = self.session.post(Url.login(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
-        if Client.DEBUG:
-            Client.log_response(resp)
+        if Robinhood.DEBUG:
+            Robinhood.log_response(resp)
         if resp.status_code != 200:
             # possibly throw exception instead
             print('login failed')
             return
         obj = json.loads(resp.text)
-        self.refresh_token                      = obj['refresh_token']
-        self.session.headers['Authorization']   = 'Bearer ' + obj['access_token']
+        self.refresh_token = obj['refresh_token']
+        self.session.headers['Authorization'] = 'Bearer ' + obj['access_token']
         self.logged_in = True
         # make account request to get current info
         self.account = self.account_info()['results'][0]
@@ -176,8 +176,8 @@ class Client(ApiBase):
         if not self.logged_in:
             return None
         resp = self.session.get(Url.accounts())
-        if Client.DEBUG:
-            Client.log_response(resp)
+        if Robinhood.DEBUG:
+            Robinhood.log_response(resp)
         return json.loads(resp.text)
 
     '''
@@ -192,8 +192,8 @@ class Client(ApiBase):
             "token":self.refresh_token
         }
         resp = self.session.post(Url.logout(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
-        if Client.DEBUG:
-            Client.log_response(resp)
+        if Robinhood.DEBUG:
+            Robinhood.log_response(resp)
         self.logged_in = False
 
     '''
@@ -225,14 +225,14 @@ class Client(ApiBase):
             # "ref_id":"",
             "extended_hours":extended
         }
-        if Client.DEBUG:
+        if Robinhood.DEBUG:
             print(data)
         
         resp = self.session.post(Url.order(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
         obj = json.loads(resp.text)
         self.pending_orders.append(obj)
-        if Client.DEBUG:
-            Client.log_response(resp)
+        if Robinhood.DEBUG:
+            Robinhood.log_response(resp)
         return obj
     
     def buy(self, symbol, quantity, extended=False, cancel=None):
@@ -255,14 +255,14 @@ class Client(ApiBase):
             # "ref_id":"",
             "extended_hours":extended
         }
-        if Client.DEBUG:
+        if Robinhood.DEBUG:
             print(data)
         
         resp = self.session.post(Url.order(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
         obj = json.loads(resp.text)
         self.pending_orders.append(obj)
-        if Client.DEBUG:
-            Client.log_response(resp)
+        if Robinhood.DEBUG:
+            Robinhood.log_response(resp)
         return obj
     
     def limit_sell(self, symbol, price, quantity, extended=False, cancel=None):
@@ -286,14 +286,14 @@ class Client(ApiBase):
             # "ref_id":"",
             "extended_hours":extended
         }
-        if Client.DEBUG:
+        if Robinhood.DEBUG:
             print(data)
         
         resp = self.session.post(Url.order(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
         obj = json.loads(resp.text)
         self.pending_orders.append(obj)
-        if Client.DEBUG:
-            Client.log_response(resp)
+        if Robinhood.DEBUG:
+            Robinhood.log_response(resp)
         return obj
     
     def sell(self, symbol, quantity, extended=False, cancel=None):
@@ -317,14 +317,14 @@ class Client(ApiBase):
             # "ref_id":"",
             "extended_hours":extended
         }
-        if Client.DEBUG:
+        if Robinhood.DEBUG:
             print(data)
         
         resp = self.session.post(Url.order(), data=json.dumps(data), headers={'Content-Type': 'application/json'})
         obj = json.loads(resp.text)
         self.pending_orders.append(obj)
-        if Client.DEBUG:
-            Client.log_response(resp)
+        if Robinhood.DEBUG:
+            Robinhood.log_response(resp)
         return obj
     
     def get_instrument(self, symbol):
@@ -332,8 +332,8 @@ class Client(ApiBase):
             return self.instruments[symbol]
         else:
             resp = self.session.get(Url.instruments(symbol=symbol))
-            if Client.DEBUG:
-                Client.log_response(resp)
+            if Robinhood.DEBUG:
+                Robinhood.log_response(resp)
             obj = json.loads(resp.text)
             url = obj['results'][0]['url']
             self.instruments[symbol] = url
@@ -368,8 +368,8 @@ class Client(ApiBase):
         # stock_ids is updated
         s_id = self.stock_ids[symbol]
         resp = self.session.get(Url.quote(s_id))
-        if Client.DEBUG:
-            Client.log_response(resp)
+        if Robinhood.DEBUG:
+            Robinhood.log_response(resp)
         return RQuote(json.loads(resp.text))
     
     # https://api.robinhood.com/marketdata/historicals/SPY/?bounds=trading&interval=5minute&span=day
@@ -404,8 +404,8 @@ class Client(ApiBase):
     def get_historical(self, symbol, interval, span):
         symbol = symbol.upper()
         resp = self.session.get(Url.historical(symbol, interval, span))
-        if Client.DEBUG:
-            Client.log_response(resp)
+        if Robinhood.DEBUG:
+            Robinhood.log_response(resp)
         return json.loads(resp.text)
     
     '''
@@ -422,8 +422,8 @@ class Client(ApiBase):
         symbol = symbol.upper()
         self.get_instrument(symbol)
         resp = self.session.get(Url.book(self.stock_ids[symbol]))
-        if Client.DEBUG:
-            Client.log_response(resp)
+        if Robinhood.DEBUG:
+            Robinhood.log_response(resp)
         return json.loads(resp.text)
     
     '''
@@ -462,8 +462,8 @@ class Client(ApiBase):
             return self.symbols[string]
         else:
             resp = self.session.get(instrument)
-            if Client.DEBUG:
-                Client.log_response(resp)
+            if Robinhood.DEBUG:
+                Robinhood.log_response(resp)
             obj = json.loads(resp.text)
             self.symbols[string] = obj['symbol']
             self.instruments[obj['symbol']] = instrument
@@ -475,8 +475,8 @@ class Client(ApiBase):
             return
         
         resp = self.session.post(self.pending_orders[order_pos]['cancel'])
-        if Client.DEBUG:
-            Client.log_response(resp)
+        if Robinhood.DEBUG:
+            Robinhood.log_response(resp)
         del self.pending_orders[order_pos]
     
     def log_response(resp):
