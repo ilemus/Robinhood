@@ -31,22 +31,22 @@ class ApiBase:
 
     @staticmethod
     def gen_client():
-        str = ""
+        string = ""
         for i in range(0, 8):
-            str += "{:01x}".format(random.randint(0, 15))
-        str += "-"
+            string += "{:01x}".format(random.randint(0, 15))
+        string += "-"
         for i in range(0, 4):
-            str += "{:01x}".format(random.randint(0, 15))
-        str += "-"
+            string += "{:01x}".format(random.randint(0, 15))
+        string += "-"
         for i in range(0, 4):
-            str += "{:01x}".format(random.randint(0, 15))
-        str += "-"
+            string += "{:01x}".format(random.randint(0, 15))
+        string += "-"
         for i in range(0, 4):
-            str += "{:01x}".format(random.randint(0, 15))
-        str += "-"
+            string += "{:01x}".format(random.randint(0, 15))
+        string += "-"
         for i in range(0, 12):
-            str += "{:01x}".format(random.randint(0, 15))
-        return str
+            string += "{:01x}".format(random.randint(0, 15))
+        return string
     
     def __init__(self):
         self.session = requests.Session()
@@ -54,7 +54,9 @@ class ApiBase:
         self.device_id = ApiBase.gen_client()
     
     def prompt_login(self):
-        self.login(input("Username: "), getpass.getpass())
+        user = input("Username: ")
+        pwd = getpass.getpass()
+        self.login(user, pwd)
     
     def login(self, username, password):
         pass
