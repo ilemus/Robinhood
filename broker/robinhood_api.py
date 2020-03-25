@@ -478,7 +478,8 @@ class Robinhood(ApiBase):
         if Robinhood.DEBUG:
             Robinhood.log_response(resp)
         del self.pending_orders[order_pos]
-    
+
+    @staticmethod
     def log_response(resp):
         print("--------START--------")
         print(resp.status_code)
