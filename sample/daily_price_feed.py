@@ -57,9 +57,9 @@ def run():
     parser = create_argument_parser()
     args = parser.parse_args()
     # Use a database to load the stock lists since there are so many
-    stocks = create_stock_list()
     broker = args.broker
-    out = None
+    conn = sqlite3.connect('us_equities.db')
+    cursor = conn.cursor()
     if broker == 'robinhood':
         client = Robinhood()
     elif broker == 'ameritrade':
@@ -93,10 +93,12 @@ def run():
 
     verbose = args.verbose
     failed = []
-    number_of_stocks = float(len(stocks['nasdaq']) + len(stocks['nyse']))
+    nasdaq = cursor.execute("SELECT COUNT(symbol) FROM nasdaq").fetchone()
+    nyse = cursor.execute("SELECT COUNT(symbol) FROM nyse").fetchone()
+    number_of_stocks = float(nasdaq[0] + nyse[0])
     current_count = 0
 
-    for stock in stocks['nasdaq']:
+    for stock in cursor.execute("SELECT symbol FROM nasdaq").fetchall():
         if verbose:
             current_count = current_count + 1
         try:
@@ -112,7 +114,7 @@ def run():
                     out.write(struct.pack('d', float(window['low_price'])))
                     out.write(struct.pack('L', int(window['volume'])))
                 out.close()
-                if verbose and current_count % 10 == 0:
+                if verbose:
                     print(f'\r{current_count / number_of_stocks * 100}% Complete', end='')
             elif verbose:
                 print(five_mins)
@@ -120,9 +122,9 @@ def run():
             if verbose:
                 failed.append(f'NASDAQ.{stock[0]}')
             continue
-    for stock in stocks['nyse']:
+    for stock in cursor.execute("SELECT symbol FROM nyse").fetchall():
         try:
-            five_mins = client.get_historical(stock, client.Interval.FIVE_MINUTES, client.Span.ONE_DAY)
+            five_mins = client.get_historical(stock[0], client.Interval.FIVE_MINUTES, client.Span.ONE_DAY)
             if write:
                 out = open(f'{write_to}\\nyse\\{stock[0]}', 'ab')
                 for window in five_mins['historicals']:
@@ -132,7 +134,7 @@ def run():
                     out.write(struct.pack('d', float(window['low_price'])))
                     out.write(struct.pack('L', int(window['volume'])))
                 out.close()
-                if verbose and current_count % 10 == 0:
+                if verbose:
                     print(f'\r{current_count / number_of_stocks * 100}% Complete', end='')
             elif verbose:
                 print(five_mins)
@@ -148,6 +150,7 @@ def run():
     if write:
         config['last_updated'] = datetime.now(tz=timezone.utc).strftime(update_str_format)
         json.dump(config, config_file, indent=2)
+    conn.close()
 
 
 if __name__ == '__main__':
