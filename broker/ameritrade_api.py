@@ -78,7 +78,7 @@ class Ameritrade(ApiBase):
         print("Login successful.")
         self.logged_in = True
         # When we successfully we login we can save the user/pass insecurely. Please do not share configuration.pkl file
-        if Ameritrade.INSECURE:
+        if ApiBase.INSECURE:
             config = Configuration()
             config.username = username
             config.password = password
@@ -88,17 +88,17 @@ class Ameritrade(ApiBase):
 
     # Login with already logged in credentials. Do not distribute configuration.pkl
     def insecure_login(self):
-        if not Ameritrade.INSECURE:
-            return
+        if not ApiBase.INSECURE:
+            return False
         try:
             with open('configuration.pkl', 'rb') as f:
                 config = pickle.load(f)
         except FileNotFoundError:
-            self.prompt_login()
-            return
+            return False
 
         self.device_id = config.device_id
         self.login(config.username, config.password)
+        return True
 
     # https://developer.tdameritrade.com/quotes/apis/get/marketdata/%7Bsymbol%7D/quotes
     def get_quote(self, symbol):

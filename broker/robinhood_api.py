@@ -22,6 +22,20 @@ class RQuote(Quote):
 
 
 class Robinhood(ApiBase):
+    class Interval:
+        ONE_MINUTE = 'minute'
+        FIVE_MINUTES = '5minute'
+        ONE_HOUR = 'hour'
+        ONE_DAY = 'day'
+        ONE_WEEK = 'week'
+
+    class Span:
+        ONE_DAY = 'day'
+        ONE_MONTH = 'month'
+        THREE_MONTHS = '3month'
+        ONE_YEAR = 'year'
+        FIVE_YEARS = '5year'
+
     def __init__(self):
         super().__init__()
         self.session.headers = {
@@ -121,7 +135,7 @@ class Robinhood(ApiBase):
         self.sms_confirm(username, password)
         # INSECURE LOGIN, FILE SAVED LOCALLY. POTENTIALLY MALICIOUS APPLICATIONS CAN FIND THIS FILE ######
         # TODO ENCRYPT/DECRYPT CONFIGURATION FILE
-        if Robinhood.INSECURE:
+        if ApiBase.INSECURE:
             config = Configuration()
             config.username = username
             config.password = password
@@ -132,16 +146,15 @@ class Robinhood(ApiBase):
     Insecure login
     '''
     def insecure_login(self):
-        if not Robinhood.INSECURE:
-            return
+        if not ApiBase.INSECURE:
+            return False
         # INSECURE LOGIN, FILE SAVED LOCALLY. POTENTIALLY MALICIOUS APPLICATIONS CAN FIND THIS FILE ######
         config = None
         try:
             with open('configuration.pkl', 'rb') as f:
                 config = pickle.load(f)
         except FileNotFoundError:
-            self.prompt_login()
-            return
+            return False
         self.session.cookies['device_id'] = self.device_id
         data = {
             "grant_type": "password",
@@ -160,13 +173,14 @@ class Robinhood(ApiBase):
         if resp.status_code != 200:
             # possibly throw exception instead
             print('login failed')
-            return
+            return False
         obj = json.loads(resp.text)
         self.refresh_token = obj['refresh_token']
         self.session.headers['Authorization'] = 'Bearer ' + obj['access_token']
         self.logged_in = True
         # make account request to get current info
         self.account = self.account_info()['results'][0]
+        return True
 
     '''
     account_info: requires to be logged in
