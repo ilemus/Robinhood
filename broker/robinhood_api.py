@@ -64,14 +64,14 @@ class Robinhood(ApiBase):
     
     def sms_confirm(self, username, password):
         data = {
-            "grant_type":"password",
-            "scope":"internal",
-            "client_id":self.client_id,
-            "expires_in":86400,
+            "grant_type": "password",
+            "scope": "internal",
+            "client_id": self.client_id,
+            "expires_in": 86400,
             # Device token should be user-input
-            "device_token":self.device_id,
-            "username":username,
-            "password":password,
+            "device_token": self.device_id,
+            "username": username,
+            "password": password,
             "challenge_type": "sms"
         }
         string = json.dumps(data)
@@ -139,6 +139,7 @@ class Robinhood(ApiBase):
             config = Configuration()
             config.username = username
             config.password = password
+            config.device_id = self.device_id
             with open('configuration.pkl', 'wb') as f:
                 pickle.dump(config, f, pickle.HIGHEST_PROTOCOL)
         
@@ -155,6 +156,7 @@ class Robinhood(ApiBase):
                 config = pickle.load(f)
         except FileNotFoundError:
             return False
+        self.device_id = config.device_id
         self.session.cookies['device_id'] = self.device_id
         data = {
             "grant_type": "password",
@@ -172,7 +174,8 @@ class Robinhood(ApiBase):
             Robinhood.log_response(resp)
         if resp.status_code != 200:
             # possibly throw exception instead
-            print('login failed')
+            print(f'login failed {resp.reason}')
+            self.device_id = ApiBase.gen_client()
             return False
         obj = json.loads(resp.text)
         self.refresh_token = obj['refresh_token']

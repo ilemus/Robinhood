@@ -30,13 +30,14 @@ class Paper(ApiBase):
     def _update_total(self):
         if self._account['portfolio'] is None:
             self._account['total'] = self._account['cash']
-            return
+            return self._account['total']
 
         total = 0.0
         for symbol in self._account['portfolio']:
             for purchase in self._account['portfolio'][symbol]:
                 total += self.get_quote(symbol).price * purchase['quantity']
         self._account['total'] = total + self._account['cash']
+        return self._account['total']
 
     def get_quote(self, symbol):
         return self._client.get_quote(symbol)
@@ -101,7 +102,7 @@ class Paper(ApiBase):
         with open('portfolio.json', 'w') as f:
             json.dump(self._account, f)
 
-    def load(self):
-        with open('portfolio.json', 'r') as f:
+    def load(self, location='portfolio.json'):
+        with open(location, 'r') as f:
             line = f.readline()
             self._account = json.loads(line)
