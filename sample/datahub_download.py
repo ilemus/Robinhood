@@ -5,6 +5,7 @@ import json
 
 def download_nasdaq():
     conn = sqlite3.connect('us_equities.db')
+    c = conn.cursor()
     conn.execute('CREATE TABLE IF NOT EXISTS nasdaq (id INTEGER PRIMARY KEY AUTOINCREMENT, symbol CHARACTER(6), company_name TEXT)')
     conn.commit()
     package = Package('https://datahub.io/core/nasdaq-listings/datapackage.json')
@@ -16,12 +17,12 @@ def download_nasdaq():
             if resource.descriptor['datahub']['type'] == 'derived/json' and resource.descriptor['datahub']['derivedFrom'][0] == 'nasdaq-listed-symbols':
                 companies = json.loads(resource.raw_read())
                 for company in companies:
-                    conn.execute(f'SELECT symbol FROM nasdaq WHERE symbol="{company["Symbol"]}"')
-                    cur = conn.cursor()
-                    if cur.fetchone() is None:
-                        conn.execute(f'INSERT INTO nasdaq(symbol, company_name) VALUES("{company["Symbol"]}","{company["Company Name"]}")')
+                    c.execute(f'SELECT symbol FROM nasdaq WHERE symbol=?', (company['Symbol'],))
+                    if c.fetchone() is None:
+                        conn.execute(f'INSERT INTO nasdaq(symbol, company_name) VALUES(?,?)', (company['Symbol'], company['Company Name'],))
     except Exception:
         conn.close()
+        print(company)
         raise
     conn.commit()
     conn.close()
@@ -29,6 +30,7 @@ def download_nasdaq():
 
 def download_nyse():
     conn = sqlite3.connect('us_equities.db')
+    c = conn.cursor()
     conn.execute('CREATE TABLE IF NOT EXISTS nyse (id INTEGER PRIMARY KEY AUTOINCREMENT, symbol CHARACTER(5), company_name TEXT)')
     conn.commit()
     package = Package('https://datahub.io/core/nyse-other-listings/datapackage.json')
@@ -41,13 +43,14 @@ def download_nyse():
                     resource.descriptor['datahub']['derivedFrom'][0] == 'nyse-listed':
                 companies = json.loads(resource.raw_read())
                 for company in companies:
-                    conn.execute(f'SELECT symbol FROM nyse WHERE symbol="{company["Symbol"]}"')
-                    cur = conn.cursor()
-                    if cur.fetchone() is None:
+
+                    c.execute(f'SELECT symbol FROM nyse WHERE symbol=?', (company["ACT Symbol"],))
+                    if c.fetchone() is None:
                         conn.execute(
-                            f'INSERT INTO nyse(symbol, company_name) VALUES("{company["Symbol"]}","{company["Company Name"]}")')
+                            f'INSERT INTO nyse(symbol, company_name) VALUES(?,?)', (company["ACT Symbol"], company['Company Name'],))
     except Exception:
         conn.close()
+        print(company)
         raise
     conn.commit()
     conn.close()

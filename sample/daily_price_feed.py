@@ -11,7 +11,7 @@ def create_argument_parser():
     parser.add_argument('-b', '--broker', nargs='?', choices=['robinhood', 'ameritrade'], help='A broker to use')
     parser.add_argument('-u', '--username', required=True, help='Broker login info, the username is not stored locally.')
     parser.add_argument('-p', '--password', required=True, help='Broker login info, the password is not stored locally.')
-    parser.add_argument('-o', '--output', nargs='?', help='Output file to write to')
+    parser.add_argument('-o', '--output', nargs='?', help='Output older to write to')
     parser.add_argument('-c', '--compress', action="store_true", help='Use compression')
     parser.add_argument('-v', '--verbose', action="store_true", help='Log verbose information')
     parser.add_argument('-i', '--insecure', action="store_true", help='Warning USERNAME AND PASSWORD WILL BE SAVED!!!')
